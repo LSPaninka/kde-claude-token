@@ -50,7 +50,7 @@ RowLayout {
             Layout.alignment: Qt.AlignHCenter
             text: {
                 var d = view.resetDate("five_hour");
-                return d ? Fmt.fmtHM(d) : "--:--";
+                return d ? Fmt.fmtHM(d) : "-";
             }
             color: view.textColor
             font.pixelSize: 13
@@ -80,7 +80,7 @@ RowLayout {
             Layout.alignment: Qt.AlignHCenter
             text: {
                 var d = view.resetDate("seven_day");
-                return d ? Fmt.fmtDddHM(d) : "--- --:--";
+                return d ? Fmt.fmtDddHM(d) : "-";
             }
             color: view.textColor
             font.pixelSize: 13

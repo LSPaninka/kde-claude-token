@@ -36,6 +36,20 @@ Item {
         return (u === null || u === undefined) ? 0 : u;
     }
 
+    // Fecha de reinicio de una sección, o null si no está establecida
+    function resetDateOf(section) {
+        if (!usageData || !usageData[section] || !usageData[section].resets_at) return null;
+        var d = new Date(usageData[section].resets_at);
+        return isNaN(d.getTime()) ? null : d;
+    }
+
+    // Etiqueta de reinicio: "hh:mm" (o "ddd hh:mm" si weekly). "-" si no hay límite.
+    function resetLabel(section, weekly) {
+        var d = resetDateOf(section);
+        if (!d) return "-";
+        return weekly ? Fmt.fmtDddHM(d) : Fmt.fmtHM(d);
+    }
+
     // =====================================================================
     //  Obtención de datos
     // =====================================================================
@@ -135,53 +149,70 @@ Item {
     // =====================================================================
     Plasmoid.compactRepresentation: MouseArea {
         id: cr
-        hoverEnabled: true
         onClicked: plasmoid.expanded = !plasmoid.expanded
 
         readonly property bool vertical: plasmoid.formFactor === PlasmaCore.Types.Vertical
-        // Escala 50–100 % del grosor del panel
+        // Escala 50–100 % del grosor del panel. Al 100 % el anillo ocupa
+        // (casi) todo el grosor, como los iconos vecinos.
         readonly property real scale01: Math.max(0.5, Math.min(1.0, plasmoid.configuration.panelIconScale / 100))
         readonly property real thickness: vertical ? cr.width : cr.height
         readonly property real ringSize: Math.round(Math.max(8, thickness * scale01))
         readonly property int gap: Kirigami.Units.smallSpacing
 
-        Layout.preferredWidth:  vertical ? cr.width  : (ringSize * 2 + gap * 3)
-        Layout.preferredHeight: vertical ? (ringSize * 2 + gap * 3) : cr.height
+        // La altura la fija el panel; solo declaramos el ancho preferido.
+        Layout.fillHeight: !vertical
+        Layout.fillWidth: vertical
+        Layout.preferredWidth:  vertical ? -1 : content.implicitWidth
+        Layout.preferredHeight: vertical ? content.implicitHeight : -1
         Layout.minimumWidth: Layout.preferredWidth
-        Layout.minimumHeight: Layout.preferredHeight
 
         GridLayout {
+            id: content
             anchors.centerIn: parent
-            rows: cr.vertical ? 2 : 1
             columns: cr.vertical ? 1 : 2
             rowSpacing: cr.gap
-            columnSpacing: cr.gap
+            columnSpacing: cr.gap * 2
 
-            RingChart {
-                Layout.preferredWidth: cr.ringSize
-                Layout.preferredHeight: cr.ringSize
-                value: root.utilOf("five_hour")
-                ringColor: plasmoid.configuration.ring5hColor
-                trackColor: plasmoid.configuration.ringTrackColor
-                thickness: Math.max(2, cr.ringSize * 0.15)
-                textColor: root.pctColor
+            // ---- Par 5h ----
+            RowLayout {
+                spacing: cr.gap
+                RingChart {
+                    Layout.preferredWidth: cr.ringSize
+                    Layout.preferredHeight: cr.ringSize
+                    value: root.utilOf("five_hour")
+                    ringColor: plasmoid.configuration.ring5hColor
+                    trackColor: plasmoid.configuration.ringTrackColor
+                    thickness: Math.max(2, cr.ringSize * 0.15)
+                    textColor: root.pctColor
+                }
+                Text {
+                    text: root.resetLabel("five_hour", false)
+                    color: root.txtColor
+                    font.bold: true
+                    font.pixelSize: Math.max(8, cr.ringSize * 0.30)
+                }
             }
-            RingChart {
-                Layout.preferredWidth: cr.ringSize
-                Layout.preferredHeight: cr.ringSize
-                value: root.utilOf("seven_day")
-                ringColor: plasmoid.configuration.ring7dColor
-                trackColor: plasmoid.configuration.ringTrackColor
-                thickness: Math.max(2, cr.ringSize * 0.15)
-                textColor: root.pctColor
+
+            // ---- Par 7d ----
+            RowLayout {
+                spacing: cr.gap
+                RingChart {
+                    Layout.preferredWidth: cr.ringSize
+                    Layout.preferredHeight: cr.ringSize
+                    value: root.utilOf("seven_day")
+                    ringColor: plasmoid.configuration.ring7dColor
+                    trackColor: plasmoid.configuration.ringTrackColor
+                    thickness: Math.max(2, cr.ringSize * 0.15)
+                    textColor: root.pctColor
+                }
+                Text {
+                    text: root.resetLabel("seven_day", true)
+                    color: root.txtColor
+                    font.bold: true
+                    font.pixelSize: Math.max(8, cr.ringSize * 0.30)
+                }
             }
         }
-
-        QQC2.ToolTip.text: i18n("5h: %1 %  ·  7d: %2 %",
-                                Math.round(root.utilOf("five_hour")),
-                                Math.round(root.utilOf("seven_day")))
-        QQC2.ToolTip.visible: cr.containsMouse
-        QQC2.ToolTip.delay: 500
     }
 
     // =====================================================================
