@@ -10,6 +10,7 @@ Kirigami.FormLayout {
     property alias cfg_refreshInterval: intervalSpin.value
     property alias cfg_credentialsPath: pathField.text
     property alias cfg_showRemaining: remainingCheck.checked
+    property alias cfg_panelIconScale: scaleSlider.value
     property string cfg_displayMode: "bars"
 
     // ---- Intervalo de consulta ----
@@ -51,6 +52,33 @@ Kirigami.FormLayout {
         id: remainingCheck
         Kirigami.FormData.label: i18n("Etiquetas:")
         text: i18n("Mostrar el tiempo restante (modo barras)")
+    }
+
+    Item { Kirigami.FormData.isSection: true }
+
+    // ---- Modo minimalista en el panel ----
+    RowLayout {
+        Kirigami.FormData.label: i18n("Escala de los anillos (panel):")
+        QQC2.Slider {
+            id: scaleSlider
+            from: 50
+            to: 100
+            stepSize: 5
+            snapMode: QQC2.Slider.SnapAlways
+            Layout.minimumWidth: Kirigami.Units.gridUnit * 10
+        }
+        QQC2.Label {
+            text: Math.round(scaleSlider.value) + " %"
+            Layout.minimumWidth: Kirigami.Units.gridUnit * 3
+        }
+    }
+    QQC2.Label {
+        Layout.fillWidth: true
+        Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+        text: i18n("Tamaño de los anillos cuando el plasmoide está en un panel. Al pulsarlo se abre la vista completa.")
+        wrapMode: Text.WordWrap
+        opacity: 0.7
+        font: Kirigami.Theme.smallFont
     }
 
     Item { Kirigami.FormData.isSection: true }

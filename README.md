@@ -14,11 +14,16 @@ comandos ya presentes en el sistema (`curl`, y opcionalmente `jq`).
 
 ## Características
 
-- **Dos modos de visualización** (conmutables en la configuración):
+- **En el panel (modo minimalista):** al colocar el plasmoide en un panel
+  muestra dos anillos compactos con el porcentaje; al **pulsarlo** se abre la
+  vista completa. El tamaño de los anillos en el panel es configurable
+  (**escala 50 %–100 %** del grosor del panel).
+- **En el escritorio / ventana emergente (vista completa)**, con dos modos
+  conmutables en la configuración:
   - **Barras (completo):** dos barras horizontales (5h y semanal) con el
     porcentaje, la hora de reinicio y el tiempo restante.
-  - **Anillos (minimalista):** dos anillos con el porcentaje en el centro y,
-    debajo, la hora de reinicio.
+  - **Anillos:** dos anillos con el porcentaje en el centro y, debajo, la hora
+    de reinicio.
     - Anillo 5h → `hh:mm`
     - Anillo 7d → `ddd hh:mm` (donde `ddd` son las tres primeras letras del día
       de la semana en español: `lun, mar, mié, jue, vie, sáb, dom`).
@@ -110,8 +115,9 @@ Clic derecho sobre el plasmoide → **«Configurar Uso de Claude…»**.
 | Opción | Descripción | Por defecto |
 |---|---|---|
 | **Consultar cada** | Intervalo de consulta a la API (mín. 15 s). Acepta segundos o minutos. | `2 min` |
-| **Modo de visualización** | `Barras (completo)` o `Anillos (minimalista)`. | Barras |
+| **Modo de visualización** | Vista completa: `Barras` o `Anillos`. | Barras |
 | **Mostrar el tiempo restante** | En modo barras, añade «faltan …» junto a la hora de reinicio. | Activado |
+| **Escala de los anillos (panel)** | Tamaño de los anillos cuando el plasmoide está en un panel (50 %–100 %). | 100 % |
 | **Archivo de credenciales** | Ruta al `.credentials.json`. Vacío = `~/.claude/.credentials.json`. | (vacío) |
 
 ### Pestaña «Colores»

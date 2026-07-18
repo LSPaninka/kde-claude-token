@@ -68,7 +68,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             text: Math.round(ring.value) + "%"
             color: ring.textColor
-            font.pixelSize: Math.max(12, ring.width * 0.24)
+            font.pixelSize: Math.max(7, ring.width * 0.28)
             font.bold: true
         }
         Text {
@@ -77,7 +77,7 @@ Item {
             text: ring.caption
             color: ring.subTextColor
             opacity: 0.8
-            font.pixelSize: Math.max(9, ring.width * 0.13)
+            font.pixelSize: Math.max(6, ring.width * 0.14)
         }
     }
 }

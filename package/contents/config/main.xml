@@ -28,6 +28,13 @@
         <entry name="showRemaining" type="Bool">
             <default>true</default>
         </entry>
+
+        <!-- Escala de los anillos en el panel (modo minimalista), 50-100 % -->
+        <entry name="panelIconScale" type="Int">
+            <default>100</default>
+            <min>50</min>
+            <max>100</max>
+        </entry>
     </group>
 
     <!-- ==================== Apariencia / Colores ==================== -->

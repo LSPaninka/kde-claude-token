@@ -25,7 +25,16 @@ Item {
                                        ? Kirigami.Theme.textColor
                                        : plasmoid.configuration.percentColor
 
-    Plasmoid.preferredRepresentation: Plasmoid.fullRepresentation
+    // No se fuerza la representación: en el panel se usa la compacta (anillos
+    // minimalistas) y al pulsar se abre la completa; en el escritorio se usa
+    // directamente la completa.
+
+    // Porcentaje de utilización de una sección ("five_hour" / "seven_day")
+    function utilOf(section) {
+        if (!usageData || !usageData[section]) return 0;
+        var u = usageData[section].utilization;
+        return (u === null || u === undefined) ? 0 : u;
+    }
 
     // =====================================================================
     //  Obtención de datos
@@ -121,14 +130,58 @@ Item {
     }
 
     // =====================================================================
-    //  Representación compacta (panel)
+    //  Representación compacta (panel) — modo minimalista: dos anillos
+    //  escalables. Al pulsar se abre la representación completa.
     // =====================================================================
     Plasmoid.compactRepresentation: MouseArea {
+        id: cr
+        hoverEnabled: true
         onClicked: plasmoid.expanded = !plasmoid.expanded
-        Kirigami.Icon {
-            anchors.fill: parent
-            source: "cloudstatus"
+
+        readonly property bool vertical: plasmoid.formFactor === PlasmaCore.Types.Vertical
+        // Escala 50–100 % del grosor del panel
+        readonly property real scale01: Math.max(0.5, Math.min(1.0, plasmoid.configuration.panelIconScale / 100))
+        readonly property real thickness: vertical ? cr.width : cr.height
+        readonly property real ringSize: Math.round(Math.max(8, thickness * scale01))
+        readonly property int gap: Kirigami.Units.smallSpacing
+
+        Layout.preferredWidth:  vertical ? cr.width  : (ringSize * 2 + gap * 3)
+        Layout.preferredHeight: vertical ? (ringSize * 2 + gap * 3) : cr.height
+        Layout.minimumWidth: Layout.preferredWidth
+        Layout.minimumHeight: Layout.preferredHeight
+
+        GridLayout {
+            anchors.centerIn: parent
+            rows: cr.vertical ? 2 : 1
+            columns: cr.vertical ? 1 : 2
+            rowSpacing: cr.gap
+            columnSpacing: cr.gap
+
+            RingChart {
+                Layout.preferredWidth: cr.ringSize
+                Layout.preferredHeight: cr.ringSize
+                value: root.utilOf("five_hour")
+                ringColor: plasmoid.configuration.ring5hColor
+                trackColor: plasmoid.configuration.ringTrackColor
+                thickness: Math.max(2, cr.ringSize * 0.15)
+                textColor: root.pctColor
+            }
+            RingChart {
+                Layout.preferredWidth: cr.ringSize
+                Layout.preferredHeight: cr.ringSize
+                value: root.utilOf("seven_day")
+                ringColor: plasmoid.configuration.ring7dColor
+                trackColor: plasmoid.configuration.ringTrackColor
+                thickness: Math.max(2, cr.ringSize * 0.15)
+                textColor: root.pctColor
+            }
         }
+
+        QQC2.ToolTip.text: i18n("5h: %1 %  ·  7d: %2 %",
+                                Math.round(root.utilOf("five_hour")),
+                                Math.round(root.utilOf("seven_day")))
+        QQC2.ToolTip.visible: cr.containsMouse
+        QQC2.ToolTip.delay: 500
     }
 
     // =====================================================================
