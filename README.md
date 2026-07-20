@@ -17,9 +17,10 @@ comandos ya presentes en el sistema (`curl`, y opcionalmente `jq`).
 - **En el panel (modo minimalista):** al colocar el plasmoide en un panel
   muestra dos anillos compactos con el porcentaje y, junto a cada uno, la hora
   de reinicio (5h → `hh:mm`; 7d → `ddd hh:mm`; `-` si el límite no está
-  establecido). Al **pulsarlo** se abre la vista completa. El tamaño de los
-  anillos es configurable (**escala 50 %–100 %** del grosor del panel; al 100 %
-  ocupan prácticamente todo el grosor, como los iconos vecinos).
+  establecido). **Clic izquierdo** abre la vista completa; **clic central**
+  actualiza los datos al instante sin abrir el panel. El tamaño de los anillos
+  es configurable (**escala 50 %–100 %** del grosor del panel; al 100 % ocupan
+  prácticamente todo el grosor, como los iconos vecinos).
 - **En el escritorio / ventana emergente (vista completa)**, con dos modos
   conmutables en la configuración:
   - **Barras (completo):** dos barras horizontales (5h y semanal) con el

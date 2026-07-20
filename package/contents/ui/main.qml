@@ -149,7 +149,14 @@ Item {
     // =====================================================================
     Plasmoid.compactRepresentation: MouseArea {
         id: cr
-        onClicked: plasmoid.expanded = !plasmoid.expanded
+        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+        onClicked: {
+            if (mouse.button === Qt.MiddleButton) {
+                root.refresh();          // clic central: actualizar sin abrir el panel
+            } else {
+                plasmoid.expanded = !plasmoid.expanded;
+            }
+        }
 
         readonly property bool vertical: plasmoid.formFactor === PlasmaCore.Types.Vertical
         // Escala 50–100 % del grosor del panel. Al 100 % el anillo ocupa
