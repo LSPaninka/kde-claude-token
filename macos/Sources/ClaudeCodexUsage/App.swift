@@ -1,0 +1,82 @@
+import AppKit
+import SwiftUI
+import Combine
+
+// =====================================================================
+//  Delegado de la aplicación: crea los dos ítems de la barra de menús
+//  (Claude y Codex), sus stores y la ventana de ajustes.
+// =====================================================================
+
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
+
+    let claudeSettings = ClaudeSettings()
+    let codexSettings = CodexSettings()
+
+    lazy var claudeStore = UsageStore<ClaudeUsage>(
+        fetcher: { [claudeSettings] in
+            try await ClaudeClient.fetch(credentialsPath: claudeSettings.credentialsPath)
+        },
+        intervalSeconds: { [claudeSettings] in claudeSettings.refreshInterval }
+    )
+
+    lazy var codexStore = UsageStore<CodexUsage>(
+        fetcher: { [codexSettings] in
+            try await CodexClient.fetch(credentialsPath: codexSettings.credentialsPath)
+        },
+        intervalSeconds: { [codexSettings] in codexSettings.refreshInterval }
+    )
+
+    private var claudeController: StatusController?
+    private var codexController: StatusController?
+    private var settingsWindow: NSWindow?
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // ---- Claude ----
+        let claudeFull = NSHostingController(rootView: ClaudeFullView(
+            store: claudeStore, settings: claudeSettings,
+            onSettings: { [weak self] in self?.showSettings() }))
+        claudeController = StatusController(
+            makeCompact: { [claudeStore, claudeSettings] thickness in
+                AnyView(ClaudeMenuBar(store: claudeStore, settings: claudeSettings, thickness: thickness))
+            },
+            fullView: claudeFull,
+            onRefresh: { [claudeStore] in claudeStore.refresh() },
+            onSettings: { [weak self] in self?.showSettings() },
+            changes: [
+                claudeStore.objectWillChange.eraseToAnyPublisher(),
+                claudeSettings.objectWillChange.eraseToAnyPublisher()
+            ])
+
+        // ---- Codex ----
+        let codexFull = NSHostingController(rootView: CodexFullView(
+            store: codexStore, settings: codexSettings,
+            onSettings: { [weak self] in self?.showSettings() }))
+        codexController = StatusController(
+            makeCompact: { [codexStore, codexSettings] thickness in
+                AnyView(CodexMenuBar(store: codexStore, settings: codexSettings, thickness: thickness))
+            },
+            fullView: codexFull,
+            onRefresh: { [codexStore] in codexStore.refresh() },
+            onSettings: { [weak self] in self?.showSettings() },
+            changes: [
+                codexStore.objectWillChange.eraseToAnyPublisher(),
+                codexSettings.objectWillChange.eraseToAnyPublisher()
+            ])
+    }
+
+    func showSettings() {
+        if settingsWindow == nil {
+            let hosting = NSHostingController(
+                rootView: SettingsView(claude: claudeSettings, codex: codexSettings))
+            let window = NSWindow(contentViewController: hosting)
+            window.title = "Ajustes — Uso de Claude / Codex"
+            window.styleMask = [.titled, .closable]
+            window.isReleasedWhenClosed = false
+            settingsWindow = window
+        }
+        NSApp.activate(ignoringOtherApps: true)
+        settingsWindow?.center()
+        settingsWindow?.makeKeyAndOrderFront(nil)
+    }
+}
