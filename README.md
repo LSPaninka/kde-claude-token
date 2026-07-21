@@ -11,6 +11,13 @@ Colección de plasmoides (gadgets de escritorio/panel) para
 
 Cada carpeta incluye su propio `install.sh` y `README.md` con los detalles.
 
+## Portar a otros sistemas
+
+📄 **[`SPEC.md`](SPEC.md)** — especificación técnica completa e independiente del
+lenguaje: APIs, modelo de datos, reglas de formato, algoritmos de dibujo,
+configuración, comportamientos y una guía de portabilidad a macOS, Windows y
+GNOME/GTK. Pensado para reimplementar los tres widgets sin leer el código QML.
+
 ## Instalación rápida
 
 ```bash
