@@ -11,6 +11,10 @@ import org.kde.kirigami 2.20 as Kirigami
 Item {
     id: root
 
+    // Renderiza la línea directamente en el panel (sin icono ni ventana
+    // emergente), igual que el «Separador de paneles» oficial.
+    Plasmoid.preferredRepresentation: Plasmoid.fullRepresentation
+
     // ---- Configuración ----
     readonly property color baseColor: plasmoid.configuration.lineColor
     readonly property real opacity01: Math.max(0, Math.min(100, plasmoid.configuration.opacityPercent)) / 100
