@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+                          http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+    <kcfgfile name=""/>
+
+    <group name="Appearance">
+        <!-- Color de la línea (#AARRGGBB) -->
+        <entry name="lineColor" type="String">
+            <default>#ffffffff</default>
+        </entry>
+
+        <!-- Patrón: "solid", "dashed" o "dotted" -->
+        <entry name="pattern" type="String">
+            <default>solid</default>
+        </entry>
+
+        <!-- Grosor de la línea en píxeles -->
+        <entry name="thickness" type="Int">
+            <default>2</default>
+            <min>1</min>
+            <max>40</max>
+        </entry>
+
+        <!-- Longitud de la línea como % del espacio disponible (altura) -->
+        <entry name="lengthPercent" type="Int">
+            <default>80</default>
+            <min>5</min>
+            <max>100</max>
+        </entry>
+
+        <!-- Transparencia: 0 (invisible) a 100 (opaca) -->
+        <entry name="opacityPercent" type="Int">
+            <default>100</default>
+            <min>0</min>
+            <max>100</max>
+        </entry>
+
+        <!-- Longitud de trazo y hueco para "dashed" / "dotted" -->
+        <entry name="dashLength" type="Int">
+            <default>6</default>
+            <min>1</min>
+            <max>40</max>
+        </entry>
+        <entry name="gapLength" type="Int">
+            <default>4</default>
+            <min>1</min>
+            <max>40</max>
+        </entry>
+
+        <!-- Orientación: "auto" (según el panel), "vertical" u "horizontal" -->
+        <entry name="orientation" type="String">
+            <default>auto</default>
+        </entry>
+    </group>
+</kcfg>

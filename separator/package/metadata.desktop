@@ -1,0 +1,22 @@
+[Desktop Entry]
+Name=Line Separator
+Name[es]=Separador de línea
+Comment=Una línea separadora configurable (color, patrón, grosor, longitud, transparencia)
+Comment[es]=Una línea separadora configurable (color, patrón, grosor, longitud, transparencia)
+Icon=distribute-vertical-equal
+Type=Service
+
+X-Plasma-API=declarativeappletscript
+X-Plasma-MainScript=ui/main.qml
+X-Plasma-RequiredExtensions=
+
+X-KDE-ServiceTypes=Plasma/Applet
+
+X-KDE-PluginInfo-Author=Lucas Paninka
+X-KDE-PluginInfo-Email=lucas.paninka@peperina.io
+X-KDE-PluginInfo-Name=io.peperina.lineseparator
+X-KDE-PluginInfo-Version=1.0.0
+X-KDE-PluginInfo-Website=
+X-KDE-PluginInfo-Category=Windows and Tasks
+X-KDE-PluginInfo-License=MIT
+X-KDE-PluginInfo-EnabledByDefault=true

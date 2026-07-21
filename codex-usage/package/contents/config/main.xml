@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+                          http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+    <kcfgfile name=""/>
+
+    <!-- ==================== General ==================== -->
+    <group name="General">
+        <!-- Intervalo de consulta en segundos. Por defecto: 120 (2 minutos) -->
+        <entry name="refreshInterval" type="Int">
+            <default>120</default>
+            <min>15</min>
+            <max>86400</max>
+        </entry>
+
+        <!-- Ruta del archivo de credenciales. Vacío = ${CODEX_HOME:-~/.codex}/auth.json -->
+        <entry name="credentialsPath" type="String">
+            <default></default>
+        </entry>
+
+        <!-- Modo de visualización: "bars" (completo) o "rings" (minimalista) -->
+        <entry name="displayMode" type="String">
+            <default>bars</default>
+        </entry>
+
+        <!-- Mostrar el tiempo restante junto a la hora de reinicio -->
+        <entry name="showRemaining" type="Bool">
+            <default>true</default>
+        </entry>
+
+        <!-- Escala del anillo en el panel (modo minimalista), 50-100 % -->
+        <entry name="panelIconScale" type="Int">
+            <default>100</default>
+            <min>50</min>
+            <max>100</max>
+        </entry>
+    </group>
+
+    <!-- ==================== Apariencia / Colores ==================== -->
+    <!-- Todos los colores se guardan como cadenas hexadecimales #AARRGGBB -->
+    <group name="Appearance">
+        <!-- Barra -->
+        <entry name="barColor" type="String">
+            <default>#ff10a37f</default>
+        </entry>
+        <entry name="barTrackColor" type="String">
+            <default>#40808080</default>
+        </entry>
+
+        <!-- Anillo -->
+        <entry name="ringColor" type="String">
+            <default>#ff10a37f</default>
+        </entry>
+        <entry name="ringTrackColor" type="String">
+            <default>#40808080</default>
+        </entry>
+        <entry name="ringThickness" type="Int">
+            <default>12</default>
+            <min>2</min>
+            <max>40</max>
+        </entry>
+
+        <!-- Texto -->
+        <entry name="labelColor" type="String">
+            <default>#ffffffff</default>
+        </entry>
+        <entry name="percentColor" type="String">
+            <default>#ffffffff</default>
+        </entry>
+        <entry name="useThemeTextColor" type="Bool">
+            <default>true</default>
+        </entry>
+    </group>
+</kcfg>
