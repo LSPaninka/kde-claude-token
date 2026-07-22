@@ -5,12 +5,10 @@ import Combine
 // =====================================================================
 //  Controlador de un ítem de la barra de menús (§7 y §12 de SPEC.md)
 //
-//  La vista compacta (SwiftUI) se hospeda DIRECTAMENTE en el botón del ítem con
-//  un NSHostingView, en lugar de renderizarla a una imagen. Ventajas:
-//   - El frame del botón coincide exactamente con lo visible (sin padding ni
-//     escalado extra), así el popover queda pegado a la barra de menús.
-//   - El color se adapta solo a claro/oscuro del sistema.
-//   - El contenido se refresca solo al cambiar los datos/config (SwiftUI).
+//  La vista compacta se dibuja a una NSImage (con color) y se coloca como
+//  `button.image` del NSStatusItem. Es el montaje "vanilla" de las apps de barra
+//  de menús: la ALTURA del botón la controla el sistema (la de la barra), por lo
+//  que el popover se ancla pegado a la barra, sin huecos.
 //
 //  Gestos:
 //   - Clic izquierdo → abrir/cerrar el popover con la vista completa.
@@ -18,75 +16,72 @@ import Combine
 //   - Clic derecho   → menú contextual (Actualizar / Ajustes / Salir).
 // =====================================================================
 
-/// NSHostingView que deja pasar los clics al botón padre (no los intercepta),
-/// para que el `target/action` del NSStatusItem siga funcionando.
-private final class ClickThroughHostingView<Content: View>: NSHostingView<Content> {
-    override func hitTest(_ point: NSPoint) -> NSView? { nil }
-}
-
 @MainActor
 final class StatusController {
 
     private let statusItem: NSStatusItem
     private let popover = NSPopover()
-    private let hostingView: ClickThroughHostingView<AnyView>
+    private let makeCompact: (CGFloat) -> AnyView
     private let onRefresh: () -> Void
     private let onSettings: () -> Void
     private var cancellables = Set<AnyCancellable>()
 
     init(makeCompact: @escaping (CGFloat) -> AnyView,
          fullView: NSViewController,
+         contentSize: NSSize,
          onRefresh: @escaping () -> Void,
          onSettings: @escaping () -> Void,
          changes: [AnyPublisher<Void, Never>]) {
+        self.makeCompact = makeCompact
         self.onRefresh = onRefresh
         self.onSettings = onSettings
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
-        let thickness = NSStatusBar.system.thickness
-        self.hostingView = ClickThroughHostingView(rootView: makeCompact(thickness))
-        hostingView.translatesAutoresizingMaskIntoConstraints = false
-
+        // Tamaño FIJO del popover: evita que NSPopover recalcule su tamaño desde
+        // el contenido y se desfase al refrescar. Sin animación por el mismo motivo.
         popover.behavior = .transient
-        popover.animates = true
+        popover.animates = false
+        popover.contentSize = contentSize
         popover.contentViewController = fullView
 
         if let button = statusItem.button {
+            button.imagePosition = .imageOnly
             button.target = self
             button.action = #selector(handleClick(_:))
             button.sendAction(on: [.leftMouseUp, .rightMouseUp, .otherMouseUp])
-
-            button.addSubview(hostingView)
-            // Importante: NO anclar arriba+abajo (eso podría estirar el botón y
-            // hacerlo más alto que la barra, despegando el popover). Centramos
-            // con alto fijo para que el botón conserve la altura del sistema.
-            NSLayoutConstraint.activate([
-                hostingView.leadingAnchor.constraint(equalTo: button.leadingAnchor),
-                hostingView.trailingAnchor.constraint(equalTo: button.trailingAnchor),
-                hostingView.centerYAnchor.constraint(equalTo: button.centerYAnchor),
-                hostingView.heightAnchor.constraint(equalToConstant: thickness)
-            ])
         }
 
-        updateLength()
+        renderImage()
 
-        // Al cambiar datos/config, el ancho del contenido puede variar; el
-        // contenido SwiftUI se actualiza solo, solo reajustamos la longitud.
+        // Redibuja el icono al cambiar datos/config o el tema claro/oscuro.
         for publisher in changes {
             publisher
                 .receive(on: RunLoop.main)
-                .sink { [weak self] in
-                    MainActor.assumeIsolated { self?.updateLength() }
-                }
+                .sink { [weak self] in MainActor.assumeIsolated { self?.renderImage() } }
                 .store(in: &cancellables)
         }
+        DistributedNotificationCenter.default()
+            .publisher(for: Notification.Name("AppleInterfaceThemeChangedNotification"))
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in MainActor.assumeIsolated { self?.renderImage() } }
+            .store(in: &cancellables)
     }
 
-    /// Ajusta el ancho del ítem al ancho intrínseco del contenido.
-    private func updateLength() {
-        hostingView.layoutSubtreeIfNeeded()
-        let width = hostingView.fittingSize.width
-        statusItem.length = width > 1 ? width : 40
+    /// Renderiza la vista compacta a una imagen y la coloca en el botón del ítem.
+    private func renderImage() {
+        guard let button = statusItem.button else { return }
+        let height = NSStatusBar.system.thickness
+        let isDark = button.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+
+        let content = makeCompact(height)
+            .environment(\.colorScheme, isDark ? .dark : .light)
+
+        let renderer = ImageRenderer(content: content)
+        renderer.scale = button.window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
+        if let image = renderer.nsImage {
+            image.isTemplate = false          // conservamos el color de los anillos
+            button.image = image
+        }
     }
 
     // ---- Interacción ----
@@ -110,7 +105,6 @@ final class StatusController {
         }
         // Anclar al botón del ítem (borde inferior), pegado a la barra de menús.
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-        popover.contentViewController?.view.window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
 

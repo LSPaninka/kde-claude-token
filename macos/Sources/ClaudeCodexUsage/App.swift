@@ -45,6 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 AnyView(ClaudeMenuBar(store: claudeStore, settings: claudeSettings, thickness: thickness))
             },
             fullView: claudeFull,
+            contentSize: NSSize(width: 300, height: 190),
             onRefresh: { [claudeStore] in claudeStore.refresh() },
             onSettings: { [weak self] in self?.showSettings() },
             changes: [
@@ -62,6 +63,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 AnyView(CodexMenuBar(store: codexStore, settings: codexSettings, thickness: thickness))
             },
             fullView: codexFull,
+            contentSize: NSSize(width: 300, height: 160),
             onRefresh: { [codexStore] in codexStore.refresh() },
             onSettings: { [weak self] in self?.showSettings() },
             changes: [
