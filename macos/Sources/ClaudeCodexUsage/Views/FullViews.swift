@@ -22,9 +22,12 @@ private struct FullHeader: View {
                 .lineLimit(1)
                 .truncationMode(.tail)
             Spacer()
-            if loading {
-                ProgressView().controlSize(.small)
-            }
+            // Hueco fijo para el indicador: siempre ocupa espacio (solo cambia su
+            // visibilidad) para que la cabecera no salte al empezar a cargar.
+            ProgressView()
+                .controlSize(.small)
+                .opacity(loading ? 1 : 0)
+                .frame(width: 14, height: 14)
             Button(action: onRefresh) {
                 Image(systemName: "arrow.clockwise")
             }
@@ -36,6 +39,7 @@ private struct FullHeader: View {
             .buttonStyle(.borderless)
             .help("Ajustes")
         }
+        .frame(height: 20)
     }
 }
 
