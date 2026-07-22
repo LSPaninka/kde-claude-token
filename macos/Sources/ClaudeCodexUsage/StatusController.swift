@@ -57,11 +57,14 @@ final class StatusController {
             button.sendAction(on: [.leftMouseUp, .rightMouseUp, .otherMouseUp])
 
             button.addSubview(hostingView)
+            // Importante: NO anclar arriba+abajo (eso podría estirar el botón y
+            // hacerlo más alto que la barra, despegando el popover). Centramos
+            // con alto fijo para que el botón conserve la altura del sistema.
             NSLayoutConstraint.activate([
-                hostingView.topAnchor.constraint(equalTo: button.topAnchor),
-                hostingView.bottomAnchor.constraint(equalTo: button.bottomAnchor),
                 hostingView.leadingAnchor.constraint(equalTo: button.leadingAnchor),
-                hostingView.trailingAnchor.constraint(equalTo: button.trailingAnchor)
+                hostingView.trailingAnchor.constraint(equalTo: button.trailingAnchor),
+                hostingView.centerYAnchor.constraint(equalTo: button.centerYAnchor),
+                hostingView.heightAnchor.constraint(equalToConstant: thickness)
             ])
         }
 
