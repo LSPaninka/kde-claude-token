@@ -3,9 +3,10 @@ import Foundation
 // =====================================================================
 //  Obtención de datos nativa (§2 de SPEC.md)
 //
-//  A diferencia de la referencia QML, NO ejecutamos `curl`/`jq`: leemos el
-//  archivo de credenciales en local y hacemos la petición con URLSession,
-//  fijando las cabeceras exactas. El token solo se envía al host correspondiente.
+//  A diferencia de la referencia QML, NO ejecutamos `curl`/`jq`: leemos las
+//  credenciales en local (Keychain de macOS para Claude Code, o archivo) y
+//  hacemos la petición con URLSession fijando las cabeceras exactas. El token
+//  solo se envía al host correspondiente.
 // =====================================================================
 
 enum Credentials {
@@ -44,11 +45,10 @@ enum Credentials {
         return result
     }
 
-    /// Lee el archivo de credenciales y navega por las claves anidadas indicadas
-    /// para obtener una cadena (p. ej. ["claudeAiOauth", "accessToken"]).
-    static func readString(path: URL, keys: [String]) -> String? {
-        guard let data = try? Data(contentsOf: path),
-              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+    /// Navega por las claves anidadas de un JSON (Data) y devuelve una cadena
+    /// no vacía (p. ej. ["claudeAiOauth", "accessToken"]).
+    static func readString(data: Data, keys: [String]) -> String? {
+        guard let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             return nil
         }
         var node: Any? = obj
@@ -62,6 +62,12 @@ enum Credentials {
         }
         return nil
     }
+
+    /// Igual que el anterior pero leyendo desde un archivo.
+    static func readString(path: URL, keys: [String]) -> String? {
+        guard let data = try? Data(contentsOf: path) else { return nil }
+        return readString(data: data, keys: keys)
+    }
 }
 
 // ---------------------------------------------------------------------
@@ -70,18 +76,35 @@ enum Credentials {
 
 enum ClaudeClient {
 
-    static func resolvedPath(_ configured: String) -> URL {
+    /// Servicios del Keychain donde Claude Code (macOS) guarda las credenciales.
+    private static let keychainServices = ["Claude Code-credentials", "Claude Code"]
+
+    private static let tokenKeys = ["claudeAiOauth", "accessToken"]
+
+    /// Resuelve el accessToken de Claude según el origen disponible:
+    ///  1. Si el usuario fijó una ruta en la configuración → ese archivo.
+    ///  2. Keychain de macOS (Claude Code).
+    ///  3. Archivo `~/.claude/.credentials.json` (Linux / versiones antiguas).
+    static func accessToken(configured: String) -> String? {
         let trimmed = configured.trimmingCharacters(in: .whitespaces)
-        if trimmed.isEmpty {
-            return Credentials.expand("~/.claude/.credentials.json")
+        if !trimmed.isEmpty {
+            return Credentials.readString(path: Credentials.expand(trimmed), keys: tokenKeys)
         }
-        return Credentials.expand(trimmed)
+        // Keychain de macOS.
+        for service in keychainServices {
+            if let data = Keychain.readGenericPassword(service: service),
+               let token = Credentials.readString(data: data, keys: tokenKeys) {
+                return token
+            }
+        }
+        // Respaldo: archivo por defecto.
+        return Credentials.readString(path: Credentials.expand("~/.claude/.credentials.json"),
+                                      keys: tokenKeys)
     }
 
     static func fetch(credentialsPath: String) async throws -> ClaudeUsage {
-        let path = resolvedPath(credentialsPath)
-        guard let token = Credentials.readString(path: path, keys: ["claudeAiOauth", "accessToken"]) else {
-            throw UsageError.noToken("Inicia sesión con la CLI de Claude.")
+        guard let token = accessToken(configured: credentialsPath) else {
+            throw UsageError.noToken("Inicia sesión con Claude Code (Keychain de macOS o ~/.claude/.credentials.json).")
         }
 
         var req = URLRequest(url: URL(string: "https://api.anthropic.com/api/oauth/usage")!)

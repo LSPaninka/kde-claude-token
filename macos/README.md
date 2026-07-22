@@ -21,10 +21,18 @@ formato, colores por defecto, ciclo de actualización y gestos.
 
 - macOS 26 o superior.
 - Xcode 26 / toolchain de Swift correspondiente (`swift` en el `PATH`).
-- Haber iniciado sesión con las CLIs correspondientes, para que existan las
-  credenciales locales:
-  - Claude → `~/.claude/.credentials.json`
-  - Codex  → `${CODEX_HOME:-~/.codex}/auth.json`
+- Haber iniciado sesión con las CLIs correspondientes:
+  - **Claude Code** → en macOS guarda el token en el **Keychain** (ítem de
+    contraseña genérica con servicio `Claude Code-credentials`). La app lo lee
+    de ahí automáticamente. Como respaldo también acepta el archivo
+    `~/.claude/.credentials.json` (Linux / versiones antiguas) o una ruta fijada
+    a mano en *Ajustes*.
+  - **Codex** → `${CODEX_HOME:-~/.codex}/auth.json`.
+
+  > La primera vez que la app lee el ítem del Keychain, macOS mostrará un
+  > diálogo pidiendo permiso para acceder a `Claude Code-credentials`. Pulsa
+  > **Permitir siempre**. (Al recompilar sin firma estable, el sistema puede
+  > volver a preguntar.)
 
 ## Compilar y ejecutar
 

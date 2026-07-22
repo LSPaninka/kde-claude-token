@@ -75,7 +75,7 @@ private struct ClaudeSettingsTab: View {
                 displayMode: $s.displayMode,
                 showRemaining: $s.showRemaining,
                 panelIconScale: $s.panelIconScale,
-                credentialsPlaceholder: "~/.claude/.credentials.json")
+                credentialsPlaceholder: "Keychain de macOS (o ruta a .credentials.json)")
 
             Section("Colores") {
                 Toggle("Usar el color de texto del tema", isOn: $s.useThemeTextColor)
