@@ -28,7 +28,7 @@ enum Credentials {
             let match = String(result[range])
             let inner = match.dropFirst(2).dropLast()               // VAR:-default
             let parts = inner.components(separatedBy: ":-")
-            let name = parts.first.map(String.init) ?? ""
+            let name = parts.first ?? ""
             let def = parts.count > 1 ? parts[1] : ""
             let value = ProcessInfo.processInfo.environment[name] ?? def
             result.replaceSubrange(range, with: value)

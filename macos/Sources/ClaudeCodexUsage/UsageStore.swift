@@ -12,7 +12,7 @@ import Combine
 // =====================================================================
 
 @MainActor
-final class UsageStore<Value: Equatable>: ObservableObject {
+final class UsageStore<Value: Sendable & Equatable>: ObservableObject {
 
     @Published private(set) var value: Value?
     @Published private(set) var errorMsg: String = ""
@@ -35,17 +35,20 @@ final class UsageStore<Value: Equatable>: ObservableObject {
     }
 
     private func start() {
+        // Estos `Task` se crean en un contexto aislado al MainActor, por lo que
+        // heredan ese aislamiento: acceder a `self` es seguro sin saltos extra.
+
         // Reloj de 1 s (solo actualiza `now`; no hace red).
         clockTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
-                await MainActor.run { self?.now = Date() }
+                self?.now = Date()
             }
         }
         // Bucle de sondeo (se dispara también al arrancar).
         pollTask = Task { [weak self] in
-            guard let self else { return }
             while !Task.isCancelled {
+                guard let self else { return }
                 await self.fetchNow()
                 let secs = max(15, self.intervalSeconds())
                 try? await Task.sleep(nanoseconds: UInt64(secs) * 1_000_000_000)

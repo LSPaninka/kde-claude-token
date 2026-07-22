@@ -31,7 +31,7 @@ final class StatusController {
         self.makeCompact = makeCompact
         self.onRefresh = onRefresh
         self.onSettings = onSettings
-        self.statusItem = NSStatusBar.system.statusItem(length: NSStatusItem.variableLength)
+        self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         popover.behavior = .transient
         popover.animates = true
@@ -48,7 +48,9 @@ final class StatusController {
         for publisher in changes {
             publisher
                 .receive(on: RunLoop.main)
-                .sink { [weak self] in self?.render() }
+                .sink { [weak self] in
+                    MainActor.assumeIsolated { self?.render() }
+                }
                 .store(in: &cancellables)
         }
 
@@ -56,7 +58,9 @@ final class StatusController {
         DistributedNotificationCenter.default()
             .publisher(for: Notification.Name("AppleInterfaceThemeChangedNotification"))
             .receive(on: RunLoop.main)
-            .sink { [weak self] _ in self?.render() }
+            .sink { [weak self] _ in
+                MainActor.assumeIsolated { self?.render() }
+            }
             .store(in: &cancellables)
 
         render()
@@ -83,12 +87,12 @@ final class StatusController {
     // ---- Interacción ----
 
     @objc private func handleClick(_ sender: Any?) {
-        switch NSApp.currentEvent?.type {
-        case .rightMouseUp:
+        let type = NSApp.currentEvent?.type
+        if type == .rightMouseUp {
             showMenu()
-        case .otherMouseUp:                    // clic central
+        } else if type == .otherMouseUp {      // clic central
             onRefresh()
-        default:                               // clic izquierdo
+        } else {                               // clic izquierdo
             togglePopover()
         }
     }
