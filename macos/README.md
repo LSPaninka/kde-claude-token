@@ -40,8 +40,19 @@ swift build -c release
 .build/release/ClaudeCodexUsage
 ```
 
+### En segundo plano
+
+`run.sh` compila en release y deja la app corriendo desacoplada de la terminal:
+
+```bash
+./run.sh          # build + (re)lanzar en segundo plano
+./run.sh stop     # detener la instancia
+./run.sh restart  # stop + build + lanzar
+./run.sh log      # seguir el log en vivo
+```
+
 La app es de tipo *accesorio*: no muestra icono en el Dock ni ventana principal,
-solo los dos ítems de la barra de menús.
+solo los ítems de la barra de menús.
 
 ## Gestos
 
