@@ -83,9 +83,10 @@ Las claves, tipos y valores por defecto coinciden con los del plasmoide de KDE
   `User-Agent`). El token solo se envía a su host (`api.anthropic.com` /
   `chatgpt.com`).
 - **Dibujo:** anillos y barras con `Canvas`/`Shape` de SwiftUI (§6 de `SPEC.md`).
-- **Imagen de la barra de menús:** la vista compacta se renderiza a `NSImage`
-  con `ImageRenderer` y se re-renderiza al cambiar los datos, la configuración o
-  el tema claro/oscuro del sistema.
+- **Barra de menús:** la vista compacta (SwiftUI) se hospeda directamente en el
+  botón del `NSStatusItem` con un `NSHostingView` que deja pasar los clics. El
+  frame del botón coincide con lo visible, así el popover queda pegado a la barra
+  y el color se adapta solo a claro/oscuro.
 - **Estructura del código:**
   - `Format.swift` — formato puro (port de `format.js`).
   - `Model.swift` — modelo normalizado, errores, parseo de fechas.

@@ -5,20 +5,31 @@ import Combine
 // =====================================================================
 //  Controlador de un ítem de la barra de menús (§7 y §12 de SPEC.md)
 //
-//  - La representación compacta se renderiza a una NSImage (con color) que se
-//    coloca en el NSStatusItem; se re-renderiza cuando cambian los datos, la
-//    configuración o la apariencia clara/oscura del sistema.
-//  - Clic izquierdo   → abrir/cerrar el popover con la vista completa.
-//  - Clic central     → actualizar de inmediato (sin abrir el popover).
-//  - Clic derecho     → menú contextual (Actualizar / Ajustes / Salir).
+//  La vista compacta (SwiftUI) se hospeda DIRECTAMENTE en el botón del ítem con
+//  un NSHostingView, en lugar de renderizarla a una imagen. Ventajas:
+//   - El frame del botón coincide exactamente con lo visible (sin padding ni
+//     escalado extra), así el popover queda pegado a la barra de menús.
+//   - El color se adapta solo a claro/oscuro del sistema.
+//   - El contenido se refresca solo al cambiar los datos/config (SwiftUI).
+//
+//  Gestos:
+//   - Clic izquierdo → abrir/cerrar el popover con la vista completa.
+//   - Clic central   → actualizar de inmediato (sin abrir el popover).
+//   - Clic derecho   → menú contextual (Actualizar / Ajustes / Salir).
 // =====================================================================
+
+/// NSHostingView que deja pasar los clics al botón padre (no los intercepta),
+/// para que el `target/action` del NSStatusItem siga funcionando.
+private final class ClickThroughHostingView<Content: View>: NSHostingView<Content> {
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+}
 
 @MainActor
 final class StatusController {
 
     private let statusItem: NSStatusItem
     private let popover = NSPopover()
-    private let makeCompact: (CGFloat) -> AnyView
+    private let hostingView: ClickThroughHostingView<AnyView>
     private let onRefresh: () -> Void
     private let onSettings: () -> Void
     private var cancellables = Set<AnyCancellable>()
@@ -28,10 +39,13 @@ final class StatusController {
          onRefresh: @escaping () -> Void,
          onSettings: @escaping () -> Void,
          changes: [AnyPublisher<Void, Never>]) {
-        self.makeCompact = makeCompact
         self.onRefresh = onRefresh
         self.onSettings = onSettings
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+
+        let thickness = NSStatusBar.system.thickness
+        self.hostingView = ClickThroughHostingView(rootView: makeCompact(thickness))
+        hostingView.translatesAutoresizingMaskIntoConstraints = false
 
         popover.behavior = .transient
         popover.animates = true
@@ -41,47 +55,35 @@ final class StatusController {
             button.target = self
             button.action = #selector(handleClick(_:))
             button.sendAction(on: [.leftMouseUp, .rightMouseUp, .otherMouseUp])
+
+            button.addSubview(hostingView)
+            NSLayoutConstraint.activate([
+                hostingView.topAnchor.constraint(equalTo: button.topAnchor),
+                hostingView.bottomAnchor.constraint(equalTo: button.bottomAnchor),
+                hostingView.leadingAnchor.constraint(equalTo: button.leadingAnchor),
+                hostingView.trailingAnchor.constraint(equalTo: button.trailingAnchor)
+            ])
         }
 
-        // Re-render cuando cambian datos o configuración (en el siguiente ciclo
-        // del runloop, para leer ya el valor nuevo, no el `willChange`).
+        updateLength()
+
+        // Al cambiar datos/config, el ancho del contenido puede variar; el
+        // contenido SwiftUI se actualiza solo, solo reajustamos la longitud.
         for publisher in changes {
             publisher
                 .receive(on: RunLoop.main)
                 .sink { [weak self] in
-                    MainActor.assumeIsolated { self?.render() }
+                    MainActor.assumeIsolated { self?.updateLength() }
                 }
                 .store(in: &cancellables)
         }
-
-        // Re-render al cambiar el tema claro/oscuro del sistema.
-        DistributedNotificationCenter.default()
-            .publisher(for: Notification.Name("AppleInterfaceThemeChangedNotification"))
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
-                MainActor.assumeIsolated { self?.render() }
-            }
-            .store(in: &cancellables)
-
-        render()
     }
 
-    /// Renderiza la vista compacta a una imagen y la coloca en el ítem.
-    func render() {
-        guard let button = statusItem.button else { return }
-        let thickness = NSStatusBar.system.thickness
-        let isDark = button.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-
-        let content = makeCompact(thickness)
-            .environment(\.colorScheme, isDark ? .dark : .light)
-
-        let renderer = ImageRenderer(content: content)
-        renderer.scale = NSScreen.main?.backingScaleFactor ?? 2
-        if let image = renderer.nsImage {
-            image.isTemplate = false          // conservamos el color de los anillos
-            button.image = image
-            button.imagePosition = .imageOnly
-        }
+    /// Ajusta el ancho del ítem al ancho intrínseco del contenido.
+    private func updateLength() {
+        hostingView.layoutSubtreeIfNeeded()
+        let width = hostingView.fittingSize.width
+        statusItem.length = width > 1 ? width : 40
     }
 
     // ---- Interacción ----
@@ -103,10 +105,9 @@ final class StatusController {
             popover.performClose(nil)
             return
         }
-        // Anclar SIEMPRE al botón del ítem (bajo el icono, borde inferior).
-        // Mostrar primero y activar después: activar antes puede descolocar el
-        // popover si la ventana del ítem aún no es la ventana clave.
+        // Anclar al botón del ítem (borde inferior), pegado a la barra de menús.
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        popover.contentViewController?.view.window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
 
