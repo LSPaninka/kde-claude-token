@@ -101,11 +101,13 @@ final class StatusController {
         guard let button = statusItem.button else { return }
         if popover.isShown {
             popover.performClose(nil)
-        } else {
-            NSApp.activate(ignoringOtherApps: true)
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
+            return
         }
+        // Anclar SIEMPRE al botón del ítem (bajo el icono, borde inferior).
+        // Mostrar primero y activar después: activar antes puede descolocar el
+        // popover si la ventana del ítem aún no es la ventana clave.
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     private func showMenu() {

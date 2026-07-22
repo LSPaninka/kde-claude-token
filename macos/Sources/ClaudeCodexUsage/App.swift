@@ -31,6 +31,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var codexController: StatusController?
     private var settingsWindow: NSWindow?
 
+    /// Activa/desactiva el ítem de Codex en la barra de menús.
+    /// Momentáneamente desactivado: solo se muestra Claude.
+    private let enableCodex = false
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         // ---- Claude ----
         let claudeFull = NSHostingController(rootView: ClaudeFullView(
@@ -48,7 +52,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 claudeSettings.objectWillChange.eraseToAnyPublisher()
             ])
 
-        // ---- Codex ----
+        // ---- Codex (desactivado temporalmente; poner enableCodex = true) ----
+        guard enableCodex else { return }
         let codexFull = NSHostingController(rootView: CodexFullView(
             store: codexStore, settings: codexSettings,
             onSettings: { [weak self] in self?.showSettings() }))
