@@ -15,11 +15,32 @@ Item {
     property real thickness: Math.max(4, Math.min(width, height) * 0.12)
     property string caption: ""       // pequeña etiqueta bajo el porcentaje (ej: "5h")
 
+    // ---- Destello de actualización (opcional) ----
+    // El arco pasa brevemente a "flashColor" y vuelve al color original.
+    // Sólo se activa si se llama a flash(); el fondo del anillo no se toca.
+    property color flashColor: "#00e676"      // verde brillante
+    property real flashProgress: 0            // 0 = normal, 1 = verde total
+    // Color efectivo del arco de progreso (mezcla ringColor -> flashColor)
+    readonly property color drawColor: flashProgress <= 0
+        ? ringColor
+        : Qt.rgba(ringColor.r + (flashColor.r - ringColor.r) * flashProgress,
+                  ringColor.g + (flashColor.g - ringColor.g) * flashProgress,
+                  ringColor.b + (flashColor.b - ringColor.b) * flashProgress,
+                  ringColor.a + (flashColor.a - ringColor.a) * flashProgress)
+
+    function flash() { flashAnim.restart(); }
+
+    SequentialAnimation {
+        id: flashAnim
+        NumberAnimation { target: ring; property: "flashProgress"; to: 1; duration: 150; easing.type: Easing.OutQuad }
+        NumberAnimation { target: ring; property: "flashProgress"; to: 0; duration: 550; easing.type: Easing.InQuad }
+    }
+
     implicitWidth: 120
     implicitHeight: 120
 
     onValueChanged: canvas.requestPaint()
-    onRingColorChanged: canvas.requestPaint()
+    onDrawColorChanged: canvas.requestPaint()
     onTrackColorChanged: canvas.requestPaint()
     onThicknessChanged: canvas.requestPaint()
     onWidthChanged: canvas.requestPaint()
@@ -52,7 +73,7 @@ Item {
                 var end = start + (2 * Math.PI) * (v / 100);
                 ctx.beginPath();
                 ctx.lineWidth = ring.thickness;
-                ctx.strokeStyle = ring.ringColor;
+                ctx.strokeStyle = ring.drawColor;
                 ctx.lineCap = "round";
                 ctx.arc(cx, cy, r, start, end);
                 ctx.stroke();

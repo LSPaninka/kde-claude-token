@@ -164,12 +164,19 @@ Item {
         Layout.preferredHeight: vertical ? content.implicitHeight : -1
         Layout.minimumWidth: Layout.preferredWidth
 
+        // Destello verde al actualizarse (de cualquier forma)
+        Connections {
+            target: root
+            function onLastUpdateChanged() { ring.flash(); }
+        }
+
         RowLayout {
             id: content
             anchors.centerIn: parent
             spacing: cr.gap
 
             RingChart {
+                id: ring
                 Layout.preferredWidth: cr.ringSize
                 Layout.preferredHeight: cr.ringSize
                 value: root.util()

@@ -180,10 +180,20 @@ Item {
             rowSpacing: cr.gap
             columnSpacing: cr.gap * 2
 
+            // Destello verde al actualizarse (de cualquier forma)
+            Connections {
+                target: root
+                function onLastUpdateChanged() {
+                    ring5h.flash();
+                    ring7d.flash();
+                }
+            }
+
             // ---- Par 5h ----
             RowLayout {
                 spacing: cr.gap
                 RingChart {
+                    id: ring5h
                     Layout.preferredWidth: cr.ringSize
                     Layout.preferredHeight: cr.ringSize
                     value: root.utilOf("five_hour")
@@ -204,6 +214,7 @@ Item {
             RowLayout {
                 spacing: cr.gap
                 RingChart {
+                    id: ring7d
                     Layout.preferredWidth: cr.ringSize
                     Layout.preferredHeight: cr.ringSize
                     value: root.utilOf("seven_day")

@@ -341,6 +341,12 @@ si caption:
 Notas de port: usa el `Canvas`/`Path`/`CAShapeLayer`/`Cairo` del entorno. El
 extremo redondeado ("round cap") en el arco de progreso es intencional.
 
+**Destello opcional (solo panel):** el color del arco puede animarse como
+`drawColor = mezcla(ringColor, flashColor, flashProgress)`, con
+`mezcla(a,b,t) = rgba(a.r+(b.r-a.r)·t, …)`. Al actualizarse los datos se anima
+`flashProgress` 0→1→0 (≈150 ms + ≈550 ms) con `flashColor = #00e676`. La pista y
+el texto no se tocan. Los anillos de la vista completa no usan este destello.
+
 ### 6.3 UsageBar (barra horizontal)
 
 Parámetros: `value`, `fillColor`, `trackColor`, `textColor`, `percentColor`,
@@ -455,6 +461,13 @@ Widgets de uso:
   - **Clic izquierdo** → abrir/cerrar la vista completa.
   - **Clic central** → actualizar de inmediato, sin abrir la vista.
 - **Sin tooltip** en la representación de panel (bloqueaba el clic).
+- **Destello de actualización (solo anillos de la vista de panel):** cada vez
+  que los datos se actualizan con éxito (por sondeo, botón o clic central), el
+  **arco** de cada anillo hace un breve *fade* hacia un **verde brillante**
+  (`#00e676`) y vuelve a su color original. Curva: `flashProgress` 0→1 en
+  ~150 ms (ease-out) y 1→0 en ~550 ms (ease-in); el arco se pinta mezclando
+  `ringColor` con `flashColor` según `flashProgress` (ver §6.2). **No** afecta al
+  fondo/pista del anillo, ni a los anillos de la vista completa, ni a las barras.
 
 Separador: sin interacción; solo se redibuja al cambiar su configuración.
 
