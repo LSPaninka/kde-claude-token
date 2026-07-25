@@ -16,19 +16,25 @@ Item {
     property string caption: ""       // pequeña etiqueta bajo el porcentaje (ej: "5h")
 
     // ---- Destello de actualización (opcional) ----
-    // El arco pasa brevemente a "flashColor" y vuelve al color original.
+    // El arco pasa brevemente a "flashTarget" y vuelve al color original.
     // Sólo se activa si se llama a flash(); el fondo del anillo no se toca.
-    property color flashColor: "#00e676"      // verde brillante
-    property real flashProgress: 0            // 0 = normal, 1 = verde total
-    // Color efectivo del arco de progreso (mezcla ringColor -> flashColor)
+    property color flashColor: "#00e676"      // verde brillante (por defecto/éxito)
+    property color flashTarget: flashColor    // color usado en el destello actual
+    property real flashProgress: 0            // 0 = normal, 1 = color de destello
+    // Color efectivo del arco de progreso (mezcla ringColor -> flashTarget)
     readonly property color drawColor: flashProgress <= 0
         ? ringColor
-        : Qt.rgba(ringColor.r + (flashColor.r - ringColor.r) * flashProgress,
-                  ringColor.g + (flashColor.g - ringColor.g) * flashProgress,
-                  ringColor.b + (flashColor.b - ringColor.b) * flashProgress,
-                  ringColor.a + (flashColor.a - ringColor.a) * flashProgress)
+        : Qt.rgba(ringColor.r + (flashTarget.r - ringColor.r) * flashProgress,
+                  ringColor.g + (flashTarget.g - ringColor.g) * flashProgress,
+                  ringColor.b + (flashTarget.b - ringColor.b) * flashProgress,
+                  ringColor.a + (flashTarget.a - ringColor.a) * flashProgress)
 
-    function flash() { flashAnim.restart(); }
+    // flash()        -> destello con flashColor (verde)
+    // flash("#ff...") -> destello con el color indicado (p. ej. rojo en errores)
+    function flash(c) {
+        flashTarget = (c !== undefined && c !== null && c !== "") ? c : flashColor;
+        flashAnim.restart();
+    }
 
     SequentialAnimation {
         id: flashAnim

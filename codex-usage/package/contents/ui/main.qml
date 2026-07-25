@@ -27,6 +27,9 @@ Item {
     // Plan (plus / pro / ...) informado por la API
     readonly property string planType: (usageData && usageData.plan_type) ? usageData.plan_type : ""
 
+    // Emitida al terminar cada obtención de datos (ok=true éxito, false error)
+    signal usageUpdated(bool ok)
+
     // =====================================================================
     //  Acceso a los datos (Codex sólo expone un límite: primary_window)
     // =====================================================================
@@ -78,30 +81,31 @@ Item {
 
     function handleResult(stdout, stderr) {
         root.loading = false;
+        var ok = false;
         var txt = (stdout || "").trim();
         if (txt.length === 0) {
             root.errorMsg = (stderr && stderr.trim().length)
                 ? stderr.trim()
                 : i18n("Sin respuesta. ¿Está 'curl' instalado y la sesión de Codex iniciada?");
-            return;
-        }
-        try {
-            var obj = JSON.parse(txt);
-            if (obj.error) {
-                root.errorMsg = (obj.error.message || obj.error).toString();
-                return;
+        } else {
+            try {
+                var obj = JSON.parse(txt);
+                if (obj.error) {
+                    root.errorMsg = (obj.error.message || obj.error).toString();
+                } else if (!obj.rate_limit || !obj.rate_limit.primary_window) {
+                    root.errorMsg = obj.detail ? obj.detail.toString()
+                                               : i18n("Respuesta inesperada de la API");
+                } else {
+                    root.usageData = obj;
+                    root.errorMsg = "";
+                    root.lastUpdate = Date.now();
+                    ok = true;
+                }
+            } catch (e) {
+                root.errorMsg = i18n("No se pudo interpretar la respuesta: %1", e.toString());
             }
-            if (!obj.rate_limit || !obj.rate_limit.primary_window) {
-                root.errorMsg = obj.detail ? obj.detail.toString()
-                                           : i18n("Respuesta inesperada de la API");
-                return;
-            }
-            root.usageData = obj;
-            root.errorMsg = "";
-            root.lastUpdate = Date.now();
-        } catch (e) {
-            root.errorMsg = i18n("No se pudo interpretar la respuesta: %1", e.toString());
         }
+        root.usageUpdated(ok);
     }
 
     PlasmaCore.DataSource {
@@ -164,10 +168,10 @@ Item {
         Layout.preferredHeight: vertical ? content.implicitHeight : -1
         Layout.minimumWidth: Layout.preferredWidth
 
-        // Destello verde al actualizarse (de cualquier forma)
+        // Destello al actualizarse: verde si tuvo éxito, rojo si falló.
         Connections {
             target: root
-            function onLastUpdateChanged() { ring.flash(); }
+            function onUsageUpdated(ok) { ring.flash(ok ? "" : "#ff1744"); }
         }
 
         RowLayout {

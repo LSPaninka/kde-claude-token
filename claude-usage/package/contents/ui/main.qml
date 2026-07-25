@@ -25,6 +25,9 @@ Item {
                                        ? Kirigami.Theme.textColor
                                        : plasmoid.configuration.percentColor
 
+    // Emitida al terminar cada obtención de datos (ok=true éxito, false error)
+    signal usageUpdated(bool ok)
+
     // No se fuerza la representación: en el panel se usa la compacta (anillos
     // minimalistas) y al pulsar se abre la completa; en el escritorio se usa
     // directamente la completa.
@@ -83,29 +86,30 @@ Item {
 
     function handleResult(stdout, stderr) {
         root.loading = false;
+        var ok = false;
         var txt = (stdout || "").trim();
         if (txt.length === 0) {
             root.errorMsg = (stderr && stderr.trim().length)
                 ? stderr.trim()
                 : i18n("Sin respuesta. ¿Está 'curl' instalado y el token es válido?");
-            return;
-        }
-        try {
-            var obj = JSON.parse(txt);
-            if (obj.error) {
-                root.errorMsg = obj.error.message || i18n("Error de la API");
-                return;
+        } else {
+            try {
+                var obj = JSON.parse(txt);
+                if (obj.error) {
+                    root.errorMsg = obj.error.message || i18n("Error de la API");
+                } else if (!obj.five_hour && !obj.seven_day) {
+                    root.errorMsg = i18n("Respuesta inesperada de la API");
+                } else {
+                    root.usageData = obj;
+                    root.errorMsg = "";
+                    root.lastUpdate = Date.now();
+                    ok = true;
+                }
+            } catch (e) {
+                root.errorMsg = i18n("No se pudo interpretar la respuesta: %1", e.toString());
             }
-            if (!obj.five_hour && !obj.seven_day) {
-                root.errorMsg = i18n("Respuesta inesperada de la API");
-                return;
-            }
-            root.usageData = obj;
-            root.errorMsg = "";
-            root.lastUpdate = Date.now();
-        } catch (e) {
-            root.errorMsg = i18n("No se pudo interpretar la respuesta: %1", e.toString());
         }
+        root.usageUpdated(ok);
     }
 
     PlasmaCore.DataSource {
@@ -180,12 +184,13 @@ Item {
             rowSpacing: cr.gap
             columnSpacing: cr.gap * 2
 
-            // Destello verde al actualizarse (de cualquier forma)
+            // Destello al actualizarse: verde si tuvo éxito, rojo si falló.
             Connections {
                 target: root
-                function onLastUpdateChanged() {
-                    ring5h.flash();
-                    ring7d.flash();
+                function onUsageUpdated(ok) {
+                    var c = ok ? "" : "#ff1744";   // "" => verde por defecto
+                    ring5h.flash(c);
+                    ring7d.flash(c);
                 }
             }
 
