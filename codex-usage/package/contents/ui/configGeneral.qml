@@ -10,6 +10,7 @@ Kirigami.FormLayout {
     property alias cfg_credentialsPath: pathField.text
     property alias cfg_showRemaining: remainingCheck.checked
     property alias cfg_panelIconScale: scaleSlider.value
+    property alias cfg_errorBlink: errorBlinkCheck.checked
     property string cfg_displayMode: "bars"
 
     // ---- Intervalo de consulta ----
@@ -78,6 +79,12 @@ Kirigami.FormLayout {
         wrapMode: Text.WordWrap
         opacity: 0.7
         font: Kirigami.Theme.smallFont
+    }
+
+    QQC2.CheckBox {
+        id: errorBlinkCheck
+        Kirigami.FormData.label: i18n("Errores:")
+        text: i18n("Titilar el fondo del anillo en rojo tras 2 errores seguidos")
     }
 
     Item { Kirigami.FormData.isSection: true }

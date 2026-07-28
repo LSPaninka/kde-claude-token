@@ -253,6 +253,7 @@ Todos los ajustes son persistentes por instancia del widget. Tipos: `Int`,
 | `displayMode` | String | `"bars"` | `bars`/`rings` | Vista completa: barras o anillos. |
 | `showRemaining` | Bool | `true` | — | Añadir "faltan …" en modo barras. |
 | `panelIconScale` | Int (%) | `100` | 50–100 | Tamaño de los anillos en el panel. |
+| `errorBlink` | Bool | `true` | — | Titilar el fondo del anillo en rojo oscuro tras 2 errores seguidos. |
 
 **Apariencia (colores `#AARRGGBB`)**
 
@@ -474,6 +475,18 @@ Widgets de uso:
   anillos de la vista completa, ni a las barras. Implementación: la lógica de
   obtención emite un evento `usageUpdated(ok)`; la vista de panel llama a
   `flash(verde)` u `flash(rojo)` según `ok`.
+- **Alarma por errores consecutivos (solo anillos de la vista de panel):** se
+  mantiene un contador `failStreak` (errores seguidos; se pone a 0 en cada éxito,
+  +1 en cada fallo). Cuando `failStreak >= 2` **y** la opción `errorBlink` está
+  activa (por defecto **sí**), el **fondo/pista** de cada anillo empieza a
+  **titilar sin parar** con un *fade* hacia **rojo oscuro** (`#8b0000`): se anima
+  en bucle infinito un `alarmProgress` 0→1→0 (~700 ms cada tramo, ease-in-out
+  sinusoidal) y la pista se pinta mezclando `trackColor` con `alarmColor`. Al
+  volver a haber un éxito (`failStreak = 0`) la alarma se detiene y la pista
+  vuelve a su color normal. **No** afecta al arco de progreso, ni al texto, ni a
+  la vista completa, ni a las barras. Es independiente del destello puntual: un
+  fallo produce un destello rojo del arco **y**, si ya van 2+ seguidos, además el
+  titileo del fondo.
 
 Separador: sin interacción; solo se redibuja al cambiar su configuración.
 

@@ -42,12 +42,35 @@ Item {
         NumberAnimation { target: ring; property: "flashProgress"; to: 0; duration: 550; easing.type: Easing.InQuad }
     }
 
+    // ---- Alarma persistente (errores consecutivos) ----
+    // Cuando "alarm" es true, el FONDO (pista) del anillo titila sin parar con
+    // un fade hacia rojo oscuro. No afecta al arco de progreso ni al texto.
+    property bool alarm: false
+    property color alarmColor: "#8b0000"      // rojo oscuro
+    property real alarmProgress: 0            // 0 = pista normal, 1 = rojo oscuro
+    readonly property color trackDrawColor: alarm
+        ? Qt.rgba(trackColor.r + (alarmColor.r - trackColor.r) * alarmProgress,
+                  trackColor.g + (alarmColor.g - trackColor.g) * alarmProgress,
+                  trackColor.b + (alarmColor.b - trackColor.b) * alarmProgress,
+                  trackColor.a + (alarmColor.a - trackColor.a) * alarmProgress)
+        : trackColor
+
+    onAlarmChanged: if (!alarm) alarmProgress = 0
+
+    SequentialAnimation {
+        id: alarmAnim
+        running: ring.alarm
+        loops: Animation.Infinite
+        NumberAnimation { target: ring; property: "alarmProgress"; from: 0; to: 1; duration: 700; easing.type: Easing.InOutSine }
+        NumberAnimation { target: ring; property: "alarmProgress"; to: 0; duration: 700; easing.type: Easing.InOutSine }
+    }
+
     implicitWidth: 120
     implicitHeight: 120
 
     onValueChanged: canvas.requestPaint()
     onDrawColorChanged: canvas.requestPaint()
-    onTrackColorChanged: canvas.requestPaint()
+    onTrackDrawColorChanged: canvas.requestPaint()
     onThicknessChanged: canvas.requestPaint()
     onWidthChanged: canvas.requestPaint()
     onHeightChanged: canvas.requestPaint()
@@ -68,7 +91,7 @@ Item {
             // Pista de fondo
             ctx.beginPath();
             ctx.lineWidth = ring.thickness;
-            ctx.strokeStyle = ring.trackColor;
+            ctx.strokeStyle = ring.trackDrawColor;
             ctx.arc(cx, cy, r, 0, 2 * Math.PI);
             ctx.stroke();
 

@@ -28,6 +28,10 @@ Item {
     // Emitida al terminar cada obtención de datos (ok=true éxito, false error)
     signal usageUpdated(bool ok)
 
+    // Errores consecutivos; la alarma se activa a partir de 2 seguidos.
+    property int failStreak: 0
+    readonly property bool alarmActive: plasmoid.configuration.errorBlink && failStreak >= 2
+
     // No se fuerza la representación: en el panel se usa la compacta (anillos
     // minimalistas) y al pulsar se abre la completa; en el escritorio se usa
     // directamente la completa.
@@ -109,6 +113,7 @@ Item {
                 root.errorMsg = i18n("No se pudo interpretar la respuesta: %1", e.toString());
             }
         }
+        root.failStreak = ok ? 0 : (root.failStreak + 1);
         root.usageUpdated(ok);
     }
 
@@ -206,6 +211,7 @@ Item {
                     trackColor: plasmoid.configuration.ringTrackColor
                     thickness: Math.max(2, cr.ringSize * 0.15)
                     textColor: root.pctColor
+                    alarm: root.alarmActive
                 }
                 Text {
                     text: root.resetLabel("five_hour", false)
@@ -227,6 +233,7 @@ Item {
                     trackColor: plasmoid.configuration.ringTrackColor
                     thickness: Math.max(2, cr.ringSize * 0.15)
                     textColor: root.pctColor
+                    alarm: root.alarmActive
                 }
                 Text {
                     text: root.resetLabel("seven_day", true)

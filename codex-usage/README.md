@@ -85,6 +85,7 @@ Clic derecho sobre el plasmoide → **«Configurar Uso de Codex…»**.
 | **Modo de visualización** | Vista completa: `Barra` o `Anillo`. | Barra |
 | **Mostrar el tiempo restante** | En modo barra, añade «faltan …». | Activado |
 | **Escala del anillo (panel)** | Tamaño del anillo en el panel (50 %–100 %). | 100 % |
+| **Titilar en errores** | Tras 2 errores seguidos, el fondo del anillo titila en rojo oscuro. | Activado |
 | **Archivo de credenciales** | Ruta al `auth.json`. Vacío = `${CODEX_HOME:-~/.codex}/auth.json`. | (vacío) |
 
 ### Pestaña «Colores»

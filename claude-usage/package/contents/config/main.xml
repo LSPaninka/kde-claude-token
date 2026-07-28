@@ -35,6 +35,11 @@
             <min>50</min>
             <max>100</max>
         </entry>
+
+        <!-- Titilar el fondo del anillo en rojo tras 2 errores consecutivos -->
+        <entry name="errorBlink" type="Bool">
+            <default>true</default>
+        </entry>
     </group>
 
     <!-- ==================== Apariencia / Colores ==================== -->

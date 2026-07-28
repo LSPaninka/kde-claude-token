@@ -121,6 +121,7 @@ Clic derecho sobre el plasmoide → **«Configurar Uso de Claude…»**.
 | **Modo de visualización** | Vista completa: `Barras` o `Anillos`. | Barras |
 | **Mostrar el tiempo restante** | En modo barras, añade «faltan …» junto a la hora de reinicio. | Activado |
 | **Escala de los anillos (panel)** | Tamaño de los anillos cuando el plasmoide está en un panel (50 %–100 %). | 100 % |
+| **Titilar en errores** | Tras 2 errores seguidos, el fondo del anillo titila en rojo oscuro. | Activado |
 | **Archivo de credenciales** | Ruta al `.credentials.json`. Vacío = `~/.claude/.credentials.json`. | (vacío) |
 
 ### Pestaña «Colores»
