@@ -176,7 +176,10 @@ Item {
         // Destello al actualizarse: verde si tuvo éxito, rojo si falló.
         Connections {
             target: root
-            function onUsageUpdated(ok) { ring.flash(ok ? "" : "#ff1744"); }
+            function onUsageUpdated(ok) {
+                if (ok) ring.flash("#00e676", "#006400");   // arco verde + fondo verde oscuro
+                else ring.flash("#ff1744", "");             // arco rojo (fondo => alarma)
+            }
         }
 
         RowLayout {

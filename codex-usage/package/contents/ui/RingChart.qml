@@ -15,24 +15,33 @@ Item {
     property real thickness: Math.max(4, Math.min(width, height) * 0.12)
     property string caption: ""       // pequeña etiqueta bajo el porcentaje (ej: "5h")
 
-    // ---- Destello de actualización (opcional) ----
-    // El arco pasa brevemente a "flashTarget" y vuelve al color original.
-    // Sólo se activa si se llama a flash(); el fondo del anillo no se toca.
-    property color flashColor: "#00e676"      // verde brillante (por defecto/éxito)
-    property color flashTarget: flashColor    // color usado en el destello actual
-    property real flashProgress: 0            // 0 = normal, 1 = color de destello
-    // Color efectivo del arco de progreso (mezcla ringColor -> flashTarget)
-    readonly property color drawColor: flashProgress <= 0
-        ? ringColor
-        : Qt.rgba(ringColor.r + (flashTarget.r - ringColor.r) * flashProgress,
-                  ringColor.g + (flashTarget.g - ringColor.g) * flashProgress,
-                  ringColor.b + (flashTarget.b - ringColor.b) * flashProgress,
-                  ringColor.a + (flashTarget.a - ringColor.a) * flashProgress)
+    // Mezcla lineal de dos colores (t: 0..1)
+    function mix(a, b, t) {
+        return Qt.rgba(a.r + (b.r - a.r) * t,
+                       a.g + (b.g - a.g) * t,
+                       a.b + (b.b - a.b) * t,
+                       a.a + (b.a - a.a) * t);
+    }
 
-    // flash()        -> destello con flashColor (verde)
-    // flash("#ff...") -> destello con el color indicado (p. ej. rojo en errores)
-    function flash(c) {
-        flashTarget = (c !== undefined && c !== null && c !== "") ? c : flashColor;
+    // ---- Destello de actualización (opcional) ----
+    // Al llamar a flash() el ARCO pasa brevemente a "flashArcColor" y, si se
+    // indica, el FONDO pasa a "flashTrackColor"; ambos vuelven al color original.
+    property color flashColor: "#00e676"      // verde brillante (arco, por defecto/éxito)
+    property color flashArcColor: flashColor  // color del arco en el destello actual
+    property color flashTrackColor: "#006400" // color del fondo en el destello actual
+    property bool  flashTrackEnabled: false   // ¿el destello también tiñe el fondo?
+    property real  flashProgress: 0           // 0 = normal, 1 = color de destello
+
+    // flash(arco)        -> destella el arco con "arco" (o verde por defecto)
+    // flash(arco, fondo) -> además tiñe el fondo con "fondo"
+    function flash(arcColor, trackFlashColor) {
+        flashArcColor = (arcColor !== undefined && arcColor !== null && arcColor !== "") ? arcColor : flashColor;
+        if (trackFlashColor !== undefined && trackFlashColor !== null && trackFlashColor !== "") {
+            flashTrackColor = trackFlashColor;
+            flashTrackEnabled = true;
+        } else {
+            flashTrackEnabled = false;
+        }
         flashAnim.restart();
     }
 
@@ -43,17 +52,23 @@ Item {
     }
 
     // ---- Alarma persistente (errores consecutivos) ----
-    // Cuando "alarm" es true, el FONDO (pista) del anillo titila sin parar con
-    // un fade hacia rojo oscuro. No afecta al arco de progreso ni al texto.
+    // Cuando "alarm" es true, en cada tic (fade en bucle) el FONDO titila hacia
+    // rojo oscuro y el ARCO hacia rojo brillante, sincronizados. No toca el texto.
     property bool alarm: false
-    property color alarmColor: "#8b0000"      // rojo oscuro
-    property real alarmProgress: 0            // 0 = pista normal, 1 = rojo oscuro
-    readonly property color trackDrawColor: alarm
-        ? Qt.rgba(trackColor.r + (alarmColor.r - trackColor.r) * alarmProgress,
-                  trackColor.g + (alarmColor.g - trackColor.g) * alarmProgress,
-                  trackColor.b + (alarmColor.b - trackColor.b) * alarmProgress,
-                  trackColor.a + (alarmColor.a - trackColor.a) * alarmProgress)
-        : trackColor
+    property color alarmColor: "#8b0000"      // rojo oscuro (fondo)
+    property color alarmArcColor: "#ff1744"   // rojo brillante (arco)
+    property real alarmProgress: 0            // 0 = normal, 1 = pico del tic
+
+    // Color efectivo del arco: base (con alarma) + destello encima.
+    readonly property color drawColor: {
+        var base = alarm ? mix(ringColor, alarmArcColor, alarmProgress) : ringColor;
+        return flashProgress > 0 ? mix(base, flashArcColor, flashProgress) : base;
+    }
+    // Color efectivo del fondo/pista: base (con alarma) + destello encima.
+    readonly property color trackDrawColor: {
+        var base = alarm ? mix(trackColor, alarmColor, alarmProgress) : trackColor;
+        return (flashProgress > 0 && flashTrackEnabled) ? mix(base, flashTrackColor, flashProgress) : base;
+    }
 
     onAlarmChanged: if (!alarm) alarmProgress = 0
 

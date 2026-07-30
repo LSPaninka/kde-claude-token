@@ -342,12 +342,24 @@ si caption:
 Notas de port: usa el `Canvas`/`Path`/`CAShapeLayer`/`Cairo` del entorno. El
 extremo redondeado ("round cap") en el arco de progreso es intencional.
 
-**Destello opcional (solo panel):** el color del arco puede animarse como
-`drawColor = mezcla(ringColor, flashTarget, flashProgress)`, con
-`mezcla(a,b,t) = rgba(a.r+(b.r-a.r)·t, …)`. Al terminar una obtención de datos se
-anima `flashProgress` 0→1→0 (≈150 ms + ≈550 ms) con
-`flashTarget = #00e676` (éxito) o `#ff1744` (fallo). La pista y el texto no se
-tocan. Los anillos de la vista completa no usan este destello.
+**Destello y alarma (solo panel).** Con `mezcla(a,b,t) = rgba(a.r+(b.r-a.r)·t, …)`,
+el color efectivo se calcula por capas (base con alarma, destello encima):
+
+```
+arcoBase   = alarm ? mezcla(ringColor,  #ff1744, alarmProgress) : ringColor
+fondoBase  = alarm ? mezcla(trackColor, #8b0000, alarmProgress) : trackColor
+drawColor       = flashProgress>0 ? mezcla(arcoBase,  flashArcColor,   flashProgress) : arcoBase
+trackDrawColor  = (flashProgress>0 && flashTrackEnabled)
+                    ? mezcla(fondoBase, flashTrackColor, flashProgress) : fondoBase
+```
+
+- **Éxito:** `flashArcColor = #00e676`, `flashTrackColor = #006400`
+  (`flashTrackEnabled = true`); `flashProgress` 0→1→0 (≈150 ms + ≈550 ms).
+- **Fallo:** `flashArcColor = #ff1744`, `flashTrackEnabled = false`.
+- **Alarma (2+ fallos):** `alarmProgress` en bucle infinito 0→1→0 (≈700 ms cada
+  tramo, sinusoidal); tiñe fondo (rojo oscuro) y arco (rojo brillante) a la vez.
+
+El texto no se toca. Los anillos de la vista completa no usan destello ni alarma.
 
 ### 6.3 UsageBar (barra horizontal)
 
@@ -465,28 +477,29 @@ Widgets de uso:
 - **Sin tooltip** en la representación de panel (bloqueaba el clic).
 - **Destello de actualización (solo anillos de la vista de panel):** cada vez
   que termina una obtención de datos (por sondeo, botón o clic central), el
-  **arco** de cada anillo hace un breve *fade* y vuelve a su color original:
-  - **Éxito → verde brillante** (`#00e676`).
-  - **Fallo → rojo brillante** (`#ff1744`).
+  anillo hace un breve *fade* y vuelve a su color original:
+  - **Éxito → arco verde brillante** (`#00e676`) **y fondo verde oscuro**
+    (`#006400`).
+  - **Fallo → arco rojo brillante** (`#ff1744`); el fondo **no** se tiñe en el
+    destello (de eso se encarga la alarma).
 
-  Curva: `flashProgress` 0→1 en ~150 ms (ease-out) y 1→0 en ~550 ms (ease-in); el
-  arco se pinta mezclando `ringColor` con el color de destello según
-  `flashProgress` (ver §6.2). **No** afecta al fondo/pista del anillo, ni a los
+  Curva: `flashProgress` 0→1 en ~150 ms (ease-out) y 1→0 en ~550 ms (ease-in);
+  arco y (si aplica) fondo se pintan mezclando su color base con el color de
+  destello según `flashProgress` (ver §6.2). **No** afecta al texto, ni a los
   anillos de la vista completa, ni a las barras. Implementación: la lógica de
-  obtención emite un evento `usageUpdated(ok)`; la vista de panel llama a
-  `flash(verde)` u `flash(rojo)` según `ok`.
+  obtención emite `usageUpdated(ok)`; la vista de panel llama a
+  `flash(arcoVerde, fondoVerdeOscuro)` u `flash(arcoRojo, "")` según `ok`.
 - **Alarma por errores consecutivos (solo anillos de la vista de panel):** se
-  mantiene un contador `failStreak` (errores seguidos; se pone a 0 en cada éxito,
-  +1 en cada fallo). Cuando `failStreak >= 2` **y** la opción `errorBlink` está
-  activa (por defecto **sí**), el **fondo/pista** de cada anillo empieza a
-  **titilar sin parar** con un *fade* hacia **rojo oscuro** (`#8b0000`): se anima
-  en bucle infinito un `alarmProgress` 0→1→0 (~700 ms cada tramo, ease-in-out
-  sinusoidal) y la pista se pinta mezclando `trackColor` con `alarmColor`. Al
-  volver a haber un éxito (`failStreak = 0`) la alarma se detiene y la pista
-  vuelve a su color normal. **No** afecta al arco de progreso, ni al texto, ni a
-  la vista completa, ni a las barras. Es independiente del destello puntual: un
-  fallo produce un destello rojo del arco **y**, si ya van 2+ seguidos, además el
-  titileo del fondo.
+  mantiene un contador `failStreak` (errores seguidos; 0 en cada éxito, +1 en
+  cada fallo). Cuando `failStreak >= 2` **y** la opción `errorBlink` está activa
+  (por defecto **sí**), cada anillo **titila sin parar** con un *fade* en bucle:
+  el **fondo/pista** hacia **rojo oscuro** (`#8b0000`) y, sincronizado, el
+  **arco de progreso** hacia **rojo brillante** (`#ff1744`), ambos con el mismo
+  `alarmProgress` 0→1→0 (~700 ms cada tramo, ease-in-out sinusoidal). Al volver a
+  haber un éxito (`failStreak = 0`) la alarma se detiene y todo vuelve a su color
+  normal. **No** afecta al texto, ni a la vista completa, ni a las barras. Es
+  independiente del destello puntual; ambos efectos se superponen (base con
+  alarma + destello encima).
 
 Separador: sin interacción; solo se redibuja al cambiar su configuración.
 

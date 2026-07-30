@@ -193,9 +193,15 @@ Item {
             Connections {
                 target: root
                 function onUsageUpdated(ok) {
-                    var c = ok ? "" : "#ff1744";   // "" => verde por defecto
-                    ring5h.flash(c);
-                    ring7d.flash(c);
+                    if (ok) {
+                        // arco verde brillante + fondo verde oscuro
+                        ring5h.flash("#00e676", "#006400");
+                        ring7d.flash("#00e676", "#006400");
+                    } else {
+                        // arco rojo brillante (el fondo lo gestiona la alarma)
+                        ring5h.flash("#ff1744", "");
+                        ring7d.flash("#ff1744", "");
+                    }
                 }
             }
 
