@@ -36,4 +36,22 @@ extension Color {
         }
         return "#" + h(ns.alphaComponent) + h(ns.redComponent) + h(ns.greenComponent) + h(ns.blueComponent)
     }
+
+    /// Componentes sRGB del color (0..1).
+    var rgba: (r: Double, g: Double, b: Double, a: Double) {
+        let ns = NSColor(self).usingColorSpace(.sRGB) ?? .gray
+        return (Double(ns.redComponent), Double(ns.greenComponent),
+                Double(ns.blueComponent), Double(ns.alphaComponent))
+    }
+}
+
+/// Mezcla lineal de dos colores (t: 0..1), en sRGB. Port de `mix()` del QML.
+func mixColors(_ a: Color, _ b: Color, _ t: Double) -> Color {
+    let x = a.rgba, y = b.rgba
+    let k = max(0, min(1, t))
+    return Color(.sRGB,
+                 red: x.r + (y.r - x.r) * k,
+                 green: x.g + (y.g - x.g) * k,
+                 blue: x.b + (y.b - x.b) * k,
+                 opacity: x.a + (y.a - x.a) * k)
 }

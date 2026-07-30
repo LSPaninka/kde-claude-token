@@ -30,6 +30,7 @@ final class ClaudeSettings: ObservableObject {
     @Published var displayMode: String     { didSet { defaults.set(displayMode, forKey: "claude.displayMode") } }
     @Published var showRemaining: Bool      { didSet { defaults.set(showRemaining, forKey: "claude.showRemaining") } }
     @Published var panelIconScale: Int      { didSet { defaults.set(panelIconScale, forKey: "claude.panelIconScale") } }
+    @Published var errorBlink: Bool         { didSet { defaults.set(errorBlink, forKey: "claude.errorBlink") } }
 
     // ---- Apariencia ----
     @Published var bar5hColor: String       { didSet { defaults.set(bar5hColor, forKey: "claude.bar5hColor") } }
@@ -49,6 +50,7 @@ final class ClaudeSettings: ObservableObject {
         displayMode       = loadString("claude.displayMode", "bars")
         showRemaining     = loadBool("claude.showRemaining", true)
         panelIconScale    = loadInt("claude.panelIconScale", 100)
+        errorBlink        = loadBool("claude.errorBlink", true)
         bar5hColor        = loadString("claude.bar5hColor", "#ffcc785c")
         bar7dColor        = loadString("claude.bar7dColor", "#ff7c5cff")
         barTrackColor     = loadString("claude.barTrackColor", "#40808080")
@@ -74,6 +76,7 @@ final class CodexSettings: ObservableObject {
     @Published var displayMode: String     { didSet { defaults.set(displayMode, forKey: "codex.displayMode") } }
     @Published var showRemaining: Bool      { didSet { defaults.set(showRemaining, forKey: "codex.showRemaining") } }
     @Published var panelIconScale: Int      { didSet { defaults.set(panelIconScale, forKey: "codex.panelIconScale") } }
+    @Published var errorBlink: Bool         { didSet { defaults.set(errorBlink, forKey: "codex.errorBlink") } }
 
     // ---- Apariencia (un solo límite → un solo color de acento) ----
     @Published var barColor: String         { didSet { defaults.set(barColor, forKey: "codex.barColor") } }
@@ -91,6 +94,7 @@ final class CodexSettings: ObservableObject {
         displayMode       = loadString("codex.displayMode", "bars")
         showRemaining     = loadBool("codex.showRemaining", true)
         panelIconScale    = loadInt("codex.panelIconScale", 100)
+        errorBlink        = loadBool("codex.errorBlink", true)
         barColor          = loadString("codex.barColor", "#ff10a37f")
         barTrackColor     = loadString("codex.barTrackColor", "#40808080")
         ringColor         = loadString("codex.ringColor", "#ff10a37f")

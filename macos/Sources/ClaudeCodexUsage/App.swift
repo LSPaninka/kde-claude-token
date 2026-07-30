@@ -27,6 +27,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         intervalSeconds: { [codexSettings] in codexSettings.refreshInterval }
     )
 
+    let claudeFX = PanelFX()
+    let codexFX = PanelFX()
+
     private var claudeController: StatusController?
     private var codexController: StatusController?
     private var settingsWindow: NSWindow?
@@ -37,12 +40,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // ---- Claude ----
+        claudeStore.onResult = { [claudeFX, claudeSettings] ok in
+            claudeFX.onResult(success: ok, alarmEnabled: claudeSettings.errorBlink)
+        }
         let claudeFull = NSHostingController(rootView: ClaudeFullView(
             store: claudeStore, settings: claudeSettings,
             onSettings: { [weak self] in self?.showSettings() }))
         claudeController = StatusController(
-            makeCompact: { [claudeStore, claudeSettings] thickness in
-                AnyView(ClaudeMenuBar(store: claudeStore, settings: claudeSettings, thickness: thickness))
+            makeCompact: { [claudeStore, claudeSettings, claudeFX] thickness in
+                AnyView(ClaudeMenuBar(store: claudeStore, settings: claudeSettings, fx: claudeFX, thickness: thickness))
             },
             fullView: claudeFull,
             contentSize: NSSize(width: 300, height: 190),
@@ -50,17 +56,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             onSettings: { [weak self] in self?.showSettings() },
             changes: [
                 claudeStore.objectWillChange.eraseToAnyPublisher(),
-                claudeSettings.objectWillChange.eraseToAnyPublisher()
+                claudeSettings.objectWillChange.eraseToAnyPublisher(),
+                claudeFX.objectWillChange.eraseToAnyPublisher()
             ])
 
         // ---- Codex (desactivado temporalmente; poner enableCodex = true) ----
         guard enableCodex else { return }
+        codexStore.onResult = { [codexFX, codexSettings] ok in
+            codexFX.onResult(success: ok, alarmEnabled: codexSettings.errorBlink)
+        }
         let codexFull = NSHostingController(rootView: CodexFullView(
             store: codexStore, settings: codexSettings,
             onSettings: { [weak self] in self?.showSettings() }))
         codexController = StatusController(
-            makeCompact: { [codexStore, codexSettings] thickness in
-                AnyView(CodexMenuBar(store: codexStore, settings: codexSettings, thickness: thickness))
+            makeCompact: { [codexStore, codexSettings, codexFX] thickness in
+                AnyView(CodexMenuBar(store: codexStore, settings: codexSettings, fx: codexFX, thickness: thickness))
             },
             fullView: codexFull,
             contentSize: NSSize(width: 300, height: 160),
@@ -68,7 +78,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             onSettings: { [weak self] in self?.showSettings() },
             changes: [
                 codexStore.objectWillChange.eraseToAnyPublisher(),
-                codexSettings.objectWillChange.eraseToAnyPublisher()
+                codexSettings.objectWillChange.eraseToAnyPublisher(),
+                codexFX.objectWillChange.eraseToAnyPublisher()
             ])
     }
 

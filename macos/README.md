@@ -83,6 +83,10 @@ Las claves, tipos y valores por defecto coinciden con los del plasmoide de KDE
   `User-Agent`). El token solo se envía a su host (`api.anthropic.com` /
   `chatgpt.com`).
 - **Dibujo:** anillos y barras con `Canvas`/`Shape` de SwiftUI (§6 de `SPEC.md`).
+- **Feedback en la barra (anillos):** destello al actualizar (verde = éxito, rojo
+  = fallo) y, tras 2 errores seguidos, titileo en rojo del anillo (configurable con
+  *Titilar en errores*). Se anima redibujando la `NSImage` con un timer que solo
+  corre mientras hay efecto activo (`PanelFX`).
 - **Barra de menús:** la vista compacta se dibuja a `NSImage` (con color) y se
   usa como `button.image` del `NSStatusItem` (montaje vanilla). Así la altura del
   botón la controla el sistema y el popover queda pegado a la barra. El popover

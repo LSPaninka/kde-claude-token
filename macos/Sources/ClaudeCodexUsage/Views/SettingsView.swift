@@ -38,6 +38,7 @@ private struct GeneralSection: View {
     @Binding var displayMode: String
     @Binding var showRemaining: Bool
     @Binding var panelIconScale: Int
+    @Binding var errorBlink: Bool
     var credentialsPlaceholder: String
 
     var body: some View {
@@ -58,6 +59,7 @@ private struct GeneralSection: View {
             Stepper(value: $panelIconScale, in: 50...100, step: 5) {
                 Text("Tamaño en la barra: \(panelIconScale) %")
             }
+            Toggle("Titilar el anillo en rojo tras 2 errores seguidos", isOn: $errorBlink)
         }
     }
 }
@@ -75,6 +77,7 @@ private struct ClaudeSettingsTab: View {
                 displayMode: $s.displayMode,
                 showRemaining: $s.showRemaining,
                 panelIconScale: $s.panelIconScale,
+                errorBlink: $s.errorBlink,
                 credentialsPlaceholder: "Keychain de macOS (o ruta a .credentials.json)")
 
             Section("Colores") {
@@ -111,6 +114,7 @@ private struct CodexSettingsTab: View {
                 displayMode: $s.displayMode,
                 showRemaining: $s.showRemaining,
                 panelIconScale: $s.panelIconScale,
+                errorBlink: $s.errorBlink,
                 credentialsPlaceholder: "${CODEX_HOME:-~/.codex}/auth.json")
 
             Section("Colores") {

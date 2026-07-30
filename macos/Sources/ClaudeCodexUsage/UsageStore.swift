@@ -24,6 +24,10 @@ final class UsageStore<Value: Sendable & Equatable>: ObservableObject {
     private let fetcher: () async throws -> Value
     private let intervalSeconds: () -> Int
 
+    /// Se invoca al terminar cada obtención (ok = éxito / fallo). Lo usa el panel
+    /// para el destello y la alarma de errores.
+    var onResult: ((Bool) -> Void)?
+
     private var pollTask: Task<Void, Never>?
     private var clockTask: Task<Void, Never>?
 
@@ -64,15 +68,18 @@ final class UsageStore<Value: Sendable & Equatable>: ObservableObject {
     private func fetchNow() async {
         loading = true
         defer { loading = false }
+        var ok = false
         do {
             let v = try await fetcher()
             value = v
             errorMsg = ""
             lastUpdate = Date()
+            ok = true
         } catch {
             // ERROR: conservamos los últimos datos válidos y mostramos el mensaje.
             errorMsg = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
         }
+        onResult?(ok)
     }
 
     deinit {

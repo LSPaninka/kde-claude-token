@@ -41,6 +41,7 @@ private struct CompactPair: View {
 struct ClaudeMenuBar: View {
     @ObservedObject var store: UsageStore<ClaudeUsage>
     @ObservedObject var settings: ClaudeSettings
+    @ObservedObject var fx: PanelFX
     var thickness: CGFloat
 
     private var ringSize: CGFloat {
@@ -50,18 +51,19 @@ struct ClaudeMenuBar: View {
 
     var body: some View {
         let u = store.value
+        let track = Color(hex: settings.ringTrackColor)
         HStack(spacing: 10) {
             CompactPair(value: u?.fiveHour.utilization ?? 0,
                         label: Fmt.resetLabel(u?.fiveHour.resetsAt, weekly: false),
-                        ringColor: Color(hex: settings.ring5hColor),
-                        trackColor: Color(hex: settings.ringTrackColor),
+                        ringColor: fx.arcColor(Color(hex: settings.ring5hColor)),
+                        trackColor: fx.trackColor(track),
                         textColor: settings.txtColor,
                         pctColor: settings.pctColor,
                         ringSize: ringSize)
             CompactPair(value: u?.sevenDay.utilization ?? 0,
                         label: Fmt.resetLabel(u?.sevenDay.resetsAt, weekly: true),
-                        ringColor: Color(hex: settings.ring7dColor),
-                        trackColor: Color(hex: settings.ringTrackColor),
+                        ringColor: fx.arcColor(Color(hex: settings.ring7dColor)),
+                        trackColor: fx.trackColor(track),
                         textColor: settings.txtColor,
                         pctColor: settings.pctColor,
                         ringSize: ringSize)
@@ -76,6 +78,7 @@ struct ClaudeMenuBar: View {
 struct CodexMenuBar: View {
     @ObservedObject var store: UsageStore<CodexUsage>
     @ObservedObject var settings: CodexSettings
+    @ObservedObject var fx: PanelFX
     var thickness: CGFloat
 
     private var ringSize: CGFloat {
@@ -87,8 +90,8 @@ struct CodexMenuBar: View {
         let u = store.value
         CompactPair(value: u?.primary.utilization ?? 0,
                     label: Fmt.resetLabel(u?.primary.resetsAt, weekly: true),
-                    ringColor: Color(hex: settings.ringColor),
-                    trackColor: Color(hex: settings.ringTrackColor),
+                    ringColor: fx.arcColor(Color(hex: settings.ringColor)),
+                    trackColor: fx.trackColor(Color(hex: settings.ringTrackColor)),
                     textColor: settings.txtColor,
                     pctColor: settings.pctColor,
                     ringSize: ringSize)
