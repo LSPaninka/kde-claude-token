@@ -406,10 +406,11 @@ Columna:
 
 **Codex — icono de reinicios disponibles (esquina inferior izquierda):**
 
-- Sólo Codex. Visible cuando `available_count > 0` de la API de créditos (§2.3);
-  si es 0 o falla, no se muestra.
-- Se ancla abajo-izquierda, tanto en la vista de panel como en el pie de la
-  vista completa. Su tooltip (al pasar el ratón) tiene el formato:
+- Sólo Codex y **sólo en la vista completa** (no en el panel). Es un icono de
+  **regalo** (`gift`). Visible cuando `available_count > 0` de la API de créditos
+  (§2.3); si es 0 o falla, no se muestra.
+- Se ancla abajo-izquierda (pie de la vista completa). Su tooltip (al pasar el
+  ratón) tiene el formato:
   ```
   Resets: <available_count>
   - <title>: <granted_at dd/mm> a <expires_at dd/mm> [<Status>]

@@ -278,25 +278,6 @@ Item {
                 }
             }
         }
-
-        // Icono de reinicio disponible (esquina inferior izquierda)
-        Kirigami.Icon {
-            source: "chronometer-reset"
-            visible: root.resetAvailable
-            width: Math.max(10, Math.min(cr.thickness * 0.5, Kirigami.Units.iconSizes.smallMedium))
-            height: width
-            anchors.left: parent.left
-            anchors.bottom: parent.bottom
-            anchors.margins: 1
-            MouseArea {
-                anchors.fill: parent
-                hoverEnabled: true
-                acceptedButtons: Qt.NoButton    // deja pasar los clics al plasmoide
-                QQC2.ToolTip.text: root.resetTooltip()
-                QQC2.ToolTip.visible: containsMouse && root.resetTooltip() !== ""
-                QQC2.ToolTip.delay: 300
-            }
-        }
     }
 
     // =====================================================================
@@ -377,7 +358,8 @@ Item {
                 Layout.fillWidth: true
 
                 Kirigami.Icon {
-                    source: "chronometer-reset"
+                    source: "gift"
+                    fallback: "package-x-generic"
                     visible: root.resetAvailable
                     Layout.preferredWidth: Kirigami.Units.iconSizes.small
                     Layout.preferredHeight: Kirigami.Units.iconSizes.small

@@ -20,9 +20,10 @@ el sistema (`curl`, y opcionalmente `jq`).
   (**escala 50 %–100 %**).
 - **Vista completa** con dos modos conmutables (barras o anillos), cada uno con
   los límites de 5 h y semanal, su hora de reinicio y el tiempo restante.
-- **Icono de reinicios disponibles** (esquina inferior izquierda): aparece
-  cuando hay un *reset credit* disponible; el tooltip lista cada crédito con su
-  título, fechas y estado. Si no hay ninguno, no se muestra.
+- **Icono de reinicios disponibles** (icono de regalo, esquina inferior
+  izquierda de la **vista completa**): aparece cuando hay un *reset credit*
+  disponible; el tooltip lista cada crédito con su título, fechas y estado. Si no
+  hay ninguno, no se muestra.
 - **Destello y alarma** en los anillos del panel: verde al actualizar con éxito,
   rojo al fallar, y titileo rojo tras 2 errores seguidos (configurable).
 - **Botón de actualización** manual y **consulta periódica** configurable (por
@@ -65,8 +66,9 @@ GET https://chatgpt.com/backend-api/wham/rate-limit-reset-credits
 ```
 
 De ahí se usan `available_count` y, por cada crédito, `title`, `granted_at`,
-`expires_at` y `status`. Si `available_count > 0`, aparece un icono en la esquina
-inferior izquierda; al pasar el ratón, el tooltip muestra:
+`expires_at` y `status`. Si `available_count > 0`, aparece un icono de regalo en
+la esquina inferior izquierda de la vista completa; al pasar el ratón, el tooltip
+muestra:
 
 ```
 Resets: 1
