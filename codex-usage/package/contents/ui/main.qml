@@ -11,7 +11,7 @@ Item {
     id: root
 
     // -------- Estado --------
-    property var usageData: null       // objeto JSON de la respuesta de la API
+    property var usageData: null
     property string errorMsg: ""
     property bool loading: false
     property double lastUpdate: 0
@@ -24,64 +24,87 @@ Item {
                                        ? Kirigami.Theme.textColor
                                        : plasmoid.configuration.percentColor
 
-    // Plan (plus / pro / ...) informado por la API
     readonly property string planType: (usageData && usageData.plan_type) ? usageData.plan_type : ""
 
-    // Emitida al terminar cada obtención de datos (ok=true éxito, false error)
     signal usageUpdated(bool ok)
-
-    // Errores consecutivos; la alarma se activa a partir de 2 seguidos.
     property int failStreak: 0
     readonly property bool alarmActive: plasmoid.configuration.errorBlink && failStreak >= 2
 
-    // =====================================================================
-    //  Acceso a los datos (Codex sólo expone un límite: primary_window)
-    // =====================================================================
-    readonly property var primary: (usageData && usageData.rate_limit)
-                                    ? usageData.rate_limit.primary_window : null
+    // -------- Créditos de reinicio (reset credits) --------
+    property var resetData: null
+    readonly property bool resetAvailable: resetData && resetData.available_count > 0
 
-    function util() {
-        if (!primary || primary.used_percent === undefined || primary.used_percent === null) return 0;
-        return primary.used_percent;
+    // =====================================================================
+    //  Acceso a los datos. Codex expone dos ventanas:
+    //    primary_window   -> límite de 5 horas
+    //    secondary_window -> límite semanal
+    // =====================================================================
+    function windowObj(which) {
+        if (!usageData || !usageData.rate_limit) return null;
+        return which === "weekly" ? usageData.rate_limit.secondary_window
+                                  : usageData.rate_limit.primary_window;
     }
-    function resetDate() {
-        if (!primary || !primary.reset_at) return null;
-        var d = new Date(primary.reset_at * 1000);   // reset_at está en segundos Unix
+    function utilOf(which) {
+        var w = windowObj(which);
+        if (!w || w.used_percent === undefined || w.used_percent === null) return 0;
+        return w.used_percent;
+    }
+    function resetDateOf(which) {
+        var w = windowObj(which);
+        if (!w || !w.reset_at) return null;
+        var d = new Date(w.reset_at * 1000);   // segundos Unix
         return isNaN(d.getTime()) ? null : d;
     }
-    // Etiqueta de reinicio semanal: "ddd hh:mm". "-" si no hay límite.
-    function resetLabel() {
-        var d = resetDate();
-        return d ? Fmt.fmtDddHM(d) : "-";
+    function resetLabel(which, weekly) {
+        var d = resetDateOf(which);
+        if (!d) return "-";
+        return weekly ? Fmt.fmtDddHM(d) : Fmt.fmtHM(d);
+    }
+
+    // Texto del tooltip del icono de reinicios disponibles
+    function resetTooltip() {
+        if (!resetData) return "";
+        var lines = [ i18n("Resets: %1", resetData.available_count) ];
+        var arr = resetData.credits || [];
+        for (var i = 0; i < arr.length; i++) {
+            var c = arr[i];
+            var st = c.status ? (c.status.charAt(0).toUpperCase() + c.status.slice(1)) : "";
+            lines.push("- " + (c.title || "") + ": "
+                       + Fmt.fmtDM(c.granted_at) + " a " + Fmt.fmtDM(c.expires_at)
+                       + " [" + st + "]");
+        }
+        return lines.join("\n");
     }
 
     // =====================================================================
     //  Obtención de datos
     // =====================================================================
-    function buildCommand() {
+    // Construye el comando de shell que lee las credenciales y consulta la URL.
+    function buildCodexCommand(url) {
         var path = plasmoid.configuration.credentialsPath;
         if (!path || path.trim() === "") {
             path = "${CODEX_HOME:-$HOME/.codex}/auth.json";
         } else {
             path = path.replace(/^~(?=\/|$)/, "$HOME");
         }
-        var p = '"' + path + '"';   // entre comillas dobles => se expande $HOME / $CODEX_HOME
+        var p = '"' + path + '"';
 
         return 'AUTH=' + p + '; ' +
                'TOKEN=$(jq -r \'.tokens.access_token // empty\' "$AUTH" 2>/dev/null); ' +
                'ACC=$(jq -r \'.tokens.account_id // .account_id // empty\' "$AUTH" 2>/dev/null); ' +
                'if [ -z "$TOKEN" ]; then TOKEN=$(sed -n \'s/.*"access_token"[[:space:]]*:[[:space:]]*"\\([^"]*\\)".*/\\1/p\' "$AUTH" | head -n1); fi; ' +
                'if [ -z "$ACC" ]; then ACC=$(sed -n \'s/.*"account_id"[[:space:]]*:[[:space:]]*"\\([^"]*\\)".*/\\1/p\' "$AUTH" | head -n1); fi; ' +
-               'curl -s https://chatgpt.com/backend-api/wham/usage ' +
+               'curl -s ' + url + ' ' +
                '-H "Authorization: Bearer $TOKEN" ' +
                '-H "ChatGPT-Account-ID: $ACC" ' +
                '-H "Accept: application/json"';
     }
+    function buildCommand()      { return buildCodexCommand("https://chatgpt.com/backend-api/wham/usage"); }
+    function buildResetCommand() { return buildCodexCommand("https://chatgpt.com/backend-api/wham/rate-limit-reset-credits"); }
 
-    function refresh() {
-        root.loading = true;
-        usageSource.exec(buildCommand());
-    }
+    function refresh()       { root.loading = true; usageSource.exec(buildCommand()); }
+    function refreshResets() { resetSource.exec(buildResetCommand()); }
+    function refreshAll()    { refresh(); refreshResets(); }
 
     function handleResult(stdout, stderr) {
         root.loading = false;
@@ -113,21 +136,40 @@ Item {
         root.usageUpdated(ok);
     }
 
+    function handleResetResult(stdout) {
+        var txt = (stdout || "").trim();
+        if (txt.length === 0) return;   // conserva el último estado conocido
+        try {
+            var obj = JSON.parse(txt);
+            if (obj && typeof obj.available_count === "number") {
+                root.resetData = obj;
+            }
+        } catch (e) { /* se ignora: se conserva el último estado */ }
+    }
+
     PlasmaCore.DataSource {
         id: usageSource
         engine: "executable"
         connectedSources: []
-
         onNewData: {
             var stdout = data["stdout"] || "";
             var stderr = data["stderr"] || "";
             disconnectSource(sourceName);
             root.handleResult(stdout, stderr);
         }
+        function exec(cmd) { connectSource(cmd); }
+    }
 
-        function exec(cmd) {
-            connectSource(cmd);
+    PlasmaCore.DataSource {
+        id: resetSource
+        engine: "executable"
+        connectedSources: []
+        onNewData: {
+            var stdout = data["stdout"] || "";
+            disconnectSource(sourceName);
+            root.handleResetResult(stdout);
         }
+        function exec(cmd) { connectSource(cmd); }
     }
 
     Timer {
@@ -136,7 +178,7 @@ Item {
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: root.refresh()
+        onTriggered: root.refreshAll()
     }
 
     Timer {
@@ -147,18 +189,15 @@ Item {
     }
 
     // =====================================================================
-    //  Representación compacta (panel) — un anillo escalable + hora de reinicio.
+    //  Representación compacta (panel) — dos anillos + hora de reinicio.
     //  Clic izquierdo: abrir la vista completa. Clic central: actualizar.
     // =====================================================================
     Plasmoid.compactRepresentation: MouseArea {
         id: cr
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
         onClicked: {
-            if (mouse.button === Qt.MiddleButton) {
-                root.refresh();
-            } else {
-                plasmoid.expanded = !plasmoid.expanded;
-            }
+            if (mouse.button === Qt.MiddleButton) root.refreshAll();
+            else plasmoid.expanded = !plasmoid.expanded;
         }
 
         readonly property bool vertical: plasmoid.formFactor === PlasmaCore.Types.Vertical
@@ -173,36 +212,89 @@ Item {
         Layout.preferredHeight: vertical ? content.implicitHeight : -1
         Layout.minimumWidth: Layout.preferredWidth
 
-        // Destello al actualizarse: verde si tuvo éxito, rojo si falló.
+        // Destello al actualizarse: verde (arco) + verde oscuro (fondo) si ok;
+        // rojo (arco) si falla.
         Connections {
             target: root
             function onUsageUpdated(ok) {
-                if (ok) ring.flash("#00e676", "#006400");   // arco verde + fondo verde oscuro
-                else ring.flash("#ff1744", "");             // arco rojo (fondo => alarma)
+                if (ok) {
+                    ring5h.flash("#00e676", "#006400");
+                    ring7d.flash("#00e676", "#006400");
+                } else {
+                    ring5h.flash("#ff1744", "");
+                    ring7d.flash("#ff1744", "");
+                }
             }
         }
 
-        RowLayout {
+        GridLayout {
             id: content
             anchors.centerIn: parent
-            spacing: cr.gap
+            columns: cr.vertical ? 1 : 2
+            rowSpacing: cr.gap
+            columnSpacing: cr.gap * 2
 
-            RingChart {
-                id: ring
-                Layout.preferredWidth: cr.ringSize
-                Layout.preferredHeight: cr.ringSize
-                value: root.util()
-                ringColor: plasmoid.configuration.ringColor
-                trackColor: plasmoid.configuration.ringTrackColor
-                thickness: Math.max(2, cr.ringSize * 0.15)
-                textColor: root.pctColor
-                alarm: root.alarmActive
+            // ---- Par 5h ----
+            RowLayout {
+                spacing: cr.gap
+                RingChart {
+                    id: ring5h
+                    Layout.preferredWidth: cr.ringSize
+                    Layout.preferredHeight: cr.ringSize
+                    value: root.utilOf("5h")
+                    ringColor: plasmoid.configuration.ring5hColor
+                    trackColor: plasmoid.configuration.ringTrackColor
+                    thickness: Math.max(2, cr.ringSize * 0.15)
+                    textColor: root.pctColor
+                    alarm: root.alarmActive
+                }
+                Text {
+                    text: root.resetLabel("5h", false)
+                    color: root.txtColor
+                    font.bold: true
+                    font.pixelSize: Math.max(8, cr.ringSize * 0.30)
+                }
             }
-            Text {
-                text: root.resetLabel()
-                color: root.txtColor
-                font.bold: true
-                font.pixelSize: Math.max(8, cr.ringSize * 0.30)
+
+            // ---- Par 7d ----
+            RowLayout {
+                spacing: cr.gap
+                RingChart {
+                    id: ring7d
+                    Layout.preferredWidth: cr.ringSize
+                    Layout.preferredHeight: cr.ringSize
+                    value: root.utilOf("weekly")
+                    ringColor: plasmoid.configuration.ring7dColor
+                    trackColor: plasmoid.configuration.ringTrackColor
+                    thickness: Math.max(2, cr.ringSize * 0.15)
+                    textColor: root.pctColor
+                    alarm: root.alarmActive
+                }
+                Text {
+                    text: root.resetLabel("weekly", true)
+                    color: root.txtColor
+                    font.bold: true
+                    font.pixelSize: Math.max(8, cr.ringSize * 0.30)
+                }
+            }
+        }
+
+        // Icono de reinicio disponible (esquina inferior izquierda)
+        Kirigami.Icon {
+            source: "chronometer-reset"
+            visible: root.resetAvailable
+            width: Math.max(10, Math.min(cr.thickness * 0.5, Kirigami.Units.iconSizes.smallMedium))
+            height: width
+            anchors.left: parent.left
+            anchors.bottom: parent.bottom
+            anchors.margins: 1
+            MouseArea {
+                anchors.fill: parent
+                hoverEnabled: true
+                acceptedButtons: Qt.NoButton    // deja pasar los clics al plasmoide
+                QQC2.ToolTip.text: root.resetTooltip()
+                QQC2.ToolTip.visible: containsMouse && root.resetTooltip() !== ""
+                QQC2.ToolTip.delay: 300
             }
         }
     }
@@ -212,9 +304,9 @@ Item {
     // =====================================================================
     Plasmoid.fullRepresentation: Item {
         Layout.minimumWidth: Kirigami.Units.gridUnit * 15
-        Layout.minimumHeight: Kirigami.Units.gridUnit * 9
+        Layout.minimumHeight: Kirigami.Units.gridUnit * 11
         Layout.preferredWidth: Kirigami.Units.gridUnit * 18
-        Layout.preferredHeight: Kirigami.Units.gridUnit * 10
+        Layout.preferredHeight: Kirigami.Units.gridUnit * 12
 
         ColumnLayout {
             anchors.fill: parent
@@ -224,7 +316,6 @@ Item {
             // ---- Encabezado ----
             RowLayout {
                 Layout.fillWidth: true
-
                 Kirigami.Icon {
                     source: "cloudstatus"
                     Layout.preferredWidth: Kirigami.Units.iconSizes.small
@@ -248,14 +339,14 @@ Item {
                 PlasmaComponents.ToolButton {
                     icon.name: "view-refresh"
                     display: QQC2.AbstractButton.IconOnly
-                    onClicked: root.refresh()
+                    onClicked: root.refreshAll()
                     QQC2.ToolTip.text: i18n("Actualizar")
                     QQC2.ToolTip.visible: hovered
                     QQC2.ToolTip.delay: 500
                 }
             }
 
-            // ---- Cuerpo: barra o anillo ----
+            // ---- Cuerpo: barras o anillos ----
             Loader {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -282,24 +373,43 @@ Item {
             }
 
             // ---- Pie ----
-            PlasmaComponents.Label {
+            RowLayout {
                 Layout.fillWidth: true
-                visible: root.errorMsg.length > 0
-                text: "⚠ " + root.errorMsg
-                color: Kirigami.Theme.negativeTextColor
-                font.pixelSize: Kirigami.Units.gridUnit * 0.55
-                wrapMode: Text.WordWrap
-                maximumLineCount: 2
-                elide: Text.ElideRight
-            }
-            PlasmaComponents.Label {
-                Layout.fillWidth: true
-                visible: root.errorMsg.length === 0 && root.lastUpdate > 0
-                horizontalAlignment: Text.AlignRight
-                text: i18n("Actualizado %1", Fmt.fmtHM(new Date(root.lastUpdate)))
-                opacity: 0.6
-                color: root.txtColor
-                font.pixelSize: Kirigami.Units.gridUnit * 0.55
+
+                Kirigami.Icon {
+                    source: "chronometer-reset"
+                    visible: root.resetAvailable
+                    Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                    Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.NoButton
+                        QQC2.ToolTip.text: root.resetTooltip()
+                        QQC2.ToolTip.visible: containsMouse && root.resetTooltip() !== ""
+                        QQC2.ToolTip.delay: 300
+                    }
+                }
+
+                PlasmaComponents.Label {
+                    Layout.fillWidth: true
+                    visible: root.errorMsg.length > 0
+                    text: "⚠ " + root.errorMsg
+                    color: Kirigami.Theme.negativeTextColor
+                    font.pixelSize: Kirigami.Units.gridUnit * 0.55
+                    wrapMode: Text.WordWrap
+                    maximumLineCount: 2
+                    elide: Text.ElideRight
+                }
+                PlasmaComponents.Label {
+                    Layout.fillWidth: true
+                    visible: root.errorMsg.length === 0 && root.lastUpdate > 0
+                    horizontalAlignment: Text.AlignRight
+                    text: i18n("Actualizado %1", Fmt.fmtHM(new Date(root.lastUpdate)))
+                    opacity: 0.6
+                    color: root.txtColor
+                    font.pixelSize: Kirigami.Units.gridUnit * 0.55
+                }
             }
         }
     }

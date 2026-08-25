@@ -43,7 +43,7 @@ Kirigami.FormLayout {
         id: modeCombo
         Kirigami.FormData.label: i18n("Modo de visualización:")
         readonly property var values: ["bars", "rings"]
-        model: [i18n("Barra (completo)"), i18n("Anillo (minimalista)")]
+        model: [i18n("Barras (completo)"), i18n("Anillos (minimalista)")]
         currentIndex: Math.max(0, values.indexOf(page.cfg_displayMode))
         onActivated: page.cfg_displayMode = values[currentIndex]
     }
@@ -51,14 +51,14 @@ Kirigami.FormLayout {
     QQC2.CheckBox {
         id: remainingCheck
         Kirigami.FormData.label: i18n("Etiquetas:")
-        text: i18n("Mostrar el tiempo restante (modo barra)")
+        text: i18n("Mostrar el tiempo restante (modo barras)")
     }
 
     Item { Kirigami.FormData.isSection: true }
 
     // ---- Modo minimalista en el panel ----
     RowLayout {
-        Kirigami.FormData.label: i18n("Escala del anillo (panel):")
+        Kirigami.FormData.label: i18n("Escala de los anillos (panel):")
         QQC2.Slider {
             id: scaleSlider
             from: 50
@@ -75,7 +75,7 @@ Kirigami.FormLayout {
     QQC2.Label {
         Layout.fillWidth: true
         Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-        text: i18n("Tamaño del anillo cuando el plasmoide está en un panel. Clic izquierdo abre la vista completa; clic central actualiza.")
+        text: i18n("Tamaño de los anillos cuando el plasmoide está en un panel. Clic izquierdo abre la vista completa; clic central actualiza.")
         wrapMode: Text.WordWrap
         opacity: 0.7
         font: Kirigami.Theme.smallFont

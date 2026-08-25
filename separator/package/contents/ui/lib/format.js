@@ -25,6 +25,13 @@ function fmtFull(d) {
     return two(d.getDate()) + "/" + two(d.getMonth() + 1) + " " + fmtHM(d);
 }
 
+// "dd/mm" a partir de una fecha o de una cadena ISO
+function fmtDM(x) {
+    var d = (x instanceof Date) ? x : new Date(x);
+    if (!d || isNaN(d.getTime())) return "--/--";
+    return two(d.getDate()) + "/" + two(d.getMonth() + 1);
+}
+
 // Tiempo restante legible a partir de milisegundos: "1d 4h", "3h 12m", "8m"
 function fmtRemaining(ms) {
     if (ms === undefined || ms === null || isNaN(ms) || ms <= 0) return "0m";

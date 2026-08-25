@@ -7,7 +7,6 @@
 
     <!-- ==================== General ==================== -->
     <group name="General">
-        <!-- Intervalo de consulta en segundos. Por defecto: 120 (2 minutos) -->
         <entry name="refreshInterval" type="Int">
             <default>120</default>
             <min>15</min>
@@ -19,43 +18,44 @@
             <default></default>
         </entry>
 
-        <!-- Modo de visualización: "bars" (completo) o "rings" (minimalista) -->
         <entry name="displayMode" type="String">
             <default>bars</default>
         </entry>
 
-        <!-- Mostrar el tiempo restante junto a la hora de reinicio -->
         <entry name="showRemaining" type="Bool">
             <default>true</default>
         </entry>
 
-        <!-- Escala del anillo en el panel (modo minimalista), 50-100 % -->
         <entry name="panelIconScale" type="Int">
             <default>100</default>
             <min>50</min>
             <max>100</max>
         </entry>
 
-        <!-- Titilar el fondo del anillo en rojo tras 2 errores consecutivos -->
         <entry name="errorBlink" type="Bool">
             <default>true</default>
         </entry>
     </group>
 
     <!-- ==================== Apariencia / Colores ==================== -->
-    <!-- Todos los colores se guardan como cadenas hexadecimales #AARRGGBB -->
     <group name="Appearance">
-        <!-- Barra -->
-        <entry name="barColor" type="String">
+        <!-- Barras -->
+        <entry name="bar5hColor" type="String">
             <default>#ff10a37f</default>
+        </entry>
+        <entry name="bar7dColor" type="String">
+            <default>#ff8e7bff</default>
         </entry>
         <entry name="barTrackColor" type="String">
             <default>#40808080</default>
         </entry>
 
-        <!-- Anillo -->
-        <entry name="ringColor" type="String">
+        <!-- Anillos -->
+        <entry name="ring5hColor" type="String">
             <default>#ff10a37f</default>
+        </entry>
+        <entry name="ring7dColor" type="String">
+            <default>#ff8e7bff</default>
         </entry>
         <entry name="ringTrackColor" type="String">
             <default>#40808080</default>

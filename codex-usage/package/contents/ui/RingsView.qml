@@ -3,10 +3,12 @@ import QtQuick.Layouts 1.15
 import "lib/format.js" as Fmt
 
 /*
- * Vista minimalista (Codex): un anillo con el porcentaje en el centro y, debajo,
- * la hora de reinicio semanal en formato "ddd hh:mm" (día en español).
+ * Vista minimalista (Codex): dos anillos con el porcentaje en el centro y, bajo
+ * cada uno, la hora de reinicio.
+ *   Anillo 5h -> hh:mm
+ *   Anillo 7d -> ddd hh:mm   (ddd = día en español)
  */
-ColumnLayout {
+RowLayout {
     id: view
 
     property var usageData: null
@@ -14,43 +16,74 @@ ColumnLayout {
     property color textColor: "#ffffff"
     property color percentColor: textColor
 
-    spacing: 6
+    spacing: 18
 
-    function primary() {
-        return (usageData && usageData.rate_limit) ? usageData.rate_limit.primary_window : null;
+    function win(which) {
+        if (!usageData || !usageData.rate_limit) return null;
+        return which === "weekly" ? usageData.rate_limit.secondary_window
+                                  : usageData.rate_limit.primary_window;
     }
-    function util() {
-        var p = primary();
-        if (!p || p.used_percent === undefined || p.used_percent === null) return 0;
-        return p.used_percent;
+    function util(which) {
+        var w = win(which);
+        if (!w || w.used_percent === undefined || w.used_percent === null) return 0;
+        return w.used_percent;
     }
-    function resetDate() {
-        var p = primary();
-        if (!p || !p.reset_at) return null;
-        var d = new Date(p.reset_at * 1000);
+    function resetDate(which) {
+        var w = win(which);
+        if (!w || !w.reset_at) return null;
+        var d = new Date(w.reset_at * 1000);
         return isNaN(d.getTime()) ? null : d;
     }
 
-    RingChart {
-        Layout.alignment: Qt.AlignCenter
+    // ---- Anillo 5h ----
+    ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
-        value: view.util()
-        caption: "7d"
-        ringColor: plasmoid.configuration.ringColor
-        trackColor: plasmoid.configuration.ringTrackColor
-        thickness: plasmoid.configuration.ringThickness
-        textColor: view.percentColor
-        subTextColor: view.textColor
-    }
-    Text {
-        Layout.alignment: Qt.AlignHCenter
-        text: {
-            var d = view.resetDate();
-            return d ? Fmt.fmtDddHM(d) : "-";
+        spacing: 6
+        RingChart {
+            Layout.alignment: Qt.AlignCenter
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            value: view.util("5h")
+            caption: "5h"
+            ringColor: plasmoid.configuration.ring5hColor
+            trackColor: plasmoid.configuration.ringTrackColor
+            thickness: plasmoid.configuration.ringThickness
+            textColor: view.percentColor
+            subTextColor: view.textColor
         }
-        color: view.textColor
-        font.pixelSize: 13
-        font.bold: true
+        Text {
+            Layout.alignment: Qt.AlignHCenter
+            text: { var d = view.resetDate("5h"); return d ? Fmt.fmtHM(d) : "-"; }
+            color: view.textColor
+            font.pixelSize: 13
+            font.bold: true
+        }
+    }
+
+    // ---- Anillo 7d ----
+    ColumnLayout {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        spacing: 6
+        RingChart {
+            Layout.alignment: Qt.AlignCenter
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            value: view.util("weekly")
+            caption: "7d"
+            ringColor: plasmoid.configuration.ring7dColor
+            trackColor: plasmoid.configuration.ringTrackColor
+            thickness: plasmoid.configuration.ringThickness
+            textColor: view.percentColor
+            subTextColor: view.textColor
+        }
+        Text {
+            Layout.alignment: Qt.AlignHCenter
+            text: { var d = view.resetDate("weekly"); return d ? Fmt.fmtDddHM(d) : "-"; }
+            color: view.textColor
+            font.pixelSize: 13
+            font.bold: true
+        }
     }
 }

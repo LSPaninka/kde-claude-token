@@ -1,9 +1,10 @@
 # Uso de Codex — Plasmoide para KDE
 
 Plasmoide (gadget de escritorio) para **Kubuntu 24.04 / KDE Plasma 5.27 / Qt 5.15**
-que muestra el porcentaje de uso **semanal** de **Codex** (a través de la cuenta
-de ChatGPT). Comparte la misma interfaz que el plasmoide de Claude (anillos,
-barras, etiquetas, comportamientos y configuración), adaptada a un único límite.
+que muestra el porcentaje de uso de **Codex** (a través de la cuenta de ChatGPT):
+el límite de **5 horas** y el límite **semanal**. Comparte la misma interfaz que
+el plasmoide de Claude (anillos, barras, etiquetas, comportamientos y
+configuración).
 
 No usa librerías externas: solo QML/Qt Quick y las herramientas ya presentes en
 el sistema (`curl`, y opcionalmente `jq`).
@@ -12,19 +13,21 @@ el sistema (`curl`, y opcionalmente `jq`).
 
 ## Características
 
-- **En el panel (modo minimalista):** un anillo con el porcentaje y, a su lado,
-  la hora de reinicio semanal en formato `ddd hh:mm` (día en español, p. ej.
+- **En el panel (modo minimalista):** dos anillos con el porcentaje y, a su lado,
+  la hora de reinicio (5h → `hh:mm`; semanal → `ddd hh:mm`, día en español, p. ej.
   `dom 08:00`; `-` si el límite no está establecido). **Clic izquierdo** abre la
   vista completa; **clic central** actualiza al instante. Tamaño configurable
   (**escala 50 %–100 %**).
-- **Vista completa** con dos modos conmutables:
-  - **Barra (completo):** una barra horizontal con el porcentaje, la hora de
-    reinicio y el tiempo restante.
-  - **Anillo:** un anillo con el porcentaje en el centro y, debajo, la hora de
-    reinicio.
+- **Vista completa** con dos modos conmutables (barras o anillos), cada uno con
+  los límites de 5 h y semanal, su hora de reinicio y el tiempo restante.
+- **Icono de reinicios disponibles** (esquina inferior izquierda): aparece
+  cuando hay un *reset credit* disponible; el tooltip lista cada crédito con su
+  título, fechas y estado. Si no hay ninguno, no se muestra.
+- **Destello y alarma** en los anillos del panel: verde al actualizar con éxito,
+  rojo al fallar, y titileo rojo tras 2 errores seguidos (configurable).
 - **Botón de actualización** manual y **consulta periódica** configurable (por
   defecto **2 minutos**).
-- **Colores configurables** (barra, anillo, fondos, etiquetas y porcentaje),
+- **Colores configurables** (barras, anillos, fondos, etiquetas y porcentaje),
   grosor del anillo y color del tema o personalizado.
 
 ---
@@ -44,11 +47,31 @@ curl -s https://chatgpt.com/backend-api/wham/usage \
   -H "Accept: application/json"
 ```
 
-De la respuesta se usan `rate_limit.primary_window.used_percent` (porcentaje) y
-`rate_limit.primary_window.reset_at` (marca de tiempo Unix del reinicio). El
-`plan_type` se muestra en el encabezado de la vista completa.
+De la respuesta se usan:
 
-Si `jq` no está disponible, el token y el `account_id` se extraen con `sed`.
+- `rate_limit.primary_window` → **límite de 5 horas** (`used_percent`, `reset_at`).
+- `rate_limit.secondary_window` → **límite semanal** (`used_percent`, `reset_at`).
+- `plan_type` → se muestra en el encabezado de la vista completa.
+
+`reset_at` está en **segundos Unix**. Si `jq` no está disponible, el token y el
+`account_id` se extraen con `sed`.
+
+### Reinicios disponibles (reset credits)
+
+Además, se consulta (con las mismas cabeceras):
+
+```
+GET https://chatgpt.com/backend-api/wham/rate-limit-reset-credits
+```
+
+De ahí se usan `available_count` y, por cada crédito, `title`, `granted_at`,
+`expires_at` y `status`. Si `available_count > 0`, aparece un icono en la esquina
+inferior izquierda; al pasar el ratón, el tooltip muestra:
+
+```
+Resets: 1
+- Restablecimiento total (semanal + 5 h): 21/08 a 20/09 [Available]
+```
 
 > El token sólo se envía a `chatgpt.com`, igual que el `curl` de arriba.
 
@@ -82,9 +105,9 @@ Clic derecho sobre el plasmoide → **«Configurar Uso de Codex…»**.
 | Opción | Descripción | Por defecto |
 |---|---|---|
 | **Consultar cada** | Intervalo de consulta a la API (mín. 15 s). | `2 min` |
-| **Modo de visualización** | Vista completa: `Barra` o `Anillo`. | Barra |
-| **Mostrar el tiempo restante** | En modo barra, añade «faltan …». | Activado |
-| **Escala del anillo (panel)** | Tamaño del anillo en el panel (50 %–100 %). | 100 % |
+| **Modo de visualización** | Vista completa: `Barras` o `Anillos`. | Barras |
+| **Mostrar el tiempo restante** | En modo barras, añade «faltan …». | Activado |
+| **Escala de los anillos (panel)** | Tamaño de los anillos en el panel (50 %–100 %). | 100 % |
 | **Titilar en errores** | Tras 2 errores seguidos, el fondo del anillo titila en rojo oscuro. | Activado |
 | **Archivo de credenciales** | Ruta al `auth.json`. Vacío = `${CODEX_HOME:-~/.codex}/auth.json`. | (vacío) |
 
@@ -92,10 +115,10 @@ Clic derecho sobre el plasmoide → **«Configurar Uso de Codex…»**.
 
 | Opción | Descripción |
 |---|---|
-| **Barra** | Color de relleno de la barra. |
-| **Fondo de barra** | Color de la pista de la barra. |
-| **Anillo** | Color del arco del anillo. |
-| **Fondo de anillo** | Color de la pista del anillo. |
+| **Barra 5h** / **Barra semanal** | Color de relleno de cada barra. |
+| **Fondo de barra** | Color de la pista de las barras. |
+| **Anillo 5h** / **Anillo semanal** | Color del arco de cada anillo. |
+| **Fondo de anillo** | Color de la pista de los anillos. |
 | **Grosor del anillo** | Grosor del trazo (2–40 px). |
 | **Usar el color del tema** | Etiquetas y porcentajes con el color del tema de Plasma. |
 | **Color de etiquetas** | Color de los textos (si no se usa el del tema). |

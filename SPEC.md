@@ -111,16 +111,32 @@ en el disco porque el usuario inició sesión con la CLI correspondiente.
   - `auth_mode` debe ser `"chatgpt"` (si no, la sesión no es válida para esta API).
 - **Campos usados de la respuesta:**
   - `plan_type` (cadena, p. ej. `"plus"`) → se muestra en el encabezado.
-  - `rate_limit.primary_window.used_percent` (número, 0–100) → porcentaje.
-  - `rate_limit.primary_window.reset_at` (**entero, segundos Unix**) → reinicio.
-  - (opcionales/informativos) `rate_limit.allowed`, `rate_limit.limit_reached`,
-    `rate_limit.primary_window.limit_window_seconds` (604800 = 7 días).
+  - `rate_limit.primary_window` → **límite de 5 horas**
+    (`limit_window_seconds` = 18000).
+  - `rate_limit.secondary_window` → **límite semanal**
+    (`limit_window_seconds` = 604800).
+  - De cada ventana: `used_percent` (número, 0–100) y `reset_at`
+    (**entero, segundos Unix**).
+  - (opcionales/informativos) `rate_limit.allowed`, `rate_limit.limit_reached`.
 
-> Codex solo expone **un** límite (ventana semanal). Si en el futuro apareciera
-> una ventana adicional (`secondary_window`), se trataría como el segundo límite
-> (equivalente al de 5 h de Claude).
+> Codex expone **dos** ventanas, igual que Claude: `primary_window` = 5 h y
+> `secondary_window` = semanal. `secondary_window` puede faltar en algunos
+> planes: en ese caso el límite semanal se muestra como `-`.
 
-### 2.3 Manejo de credenciales
+### 2.3 API de créditos de reinicio de Codex (opcional)
+
+- **Método y URL:** `GET https://chatgpt.com/backend-api/wham/rate-limit-reset-credits`
+- **Cabeceras:** las mismas que la API de uso de Codex (§2.2).
+- **Campos usados:**
+  - `available_count` (entero) → nº de reinicios disponibles.
+  - Por cada elemento de `credits[]`: `title`, `granted_at` (ISO 8601),
+    `expires_at` (ISO 8601), `status` (p. ej. `"available"`).
+- **Uso en la interfaz:** si `available_count > 0`, se muestra un icono en la
+  esquina inferior izquierda cuyo tooltip lista los créditos (ver §6.5). Si es 0
+  o la petición falla, no se muestra icono. Un fallo aquí **no** cuenta para la
+  alarma de errores.
+
+### 2.4 Manejo de credenciales
 
 Pseudocódigo de lectura del token (idéntico patrón en ambos, distintos campos):
 
@@ -138,7 +154,7 @@ Rutas por defecto (expandir `~` y variables de entorno):
 
 Ambas deben poder **sobrescribirse** por configuración (ver §5).
 
-### 2.4 Obtención nativa vs. shell
+### 2.5 Obtención nativa vs. shell
 
 La referencia QML no tiene cliente HTTP con cabeceras arbitrarias cómodo, así que
 ejecuta un comando de shell (`curl`) mediante el motor de ejecución de Plasma, con
@@ -272,20 +288,22 @@ Todos los ajustes son persistentes por instancia del widget. Tipos: `Int`,
 
 ### 5.2 Uso de Codex
 
-**General:** idéntico a Claude, salvo:
+**General:** idénticas a Claude (incluye `errorBlink`), salvo:
 - `credentialsPath` vacío = `${CODEX_HOME:-~/.codex}/auth.json`.
 
-**Apariencia** (un solo límite → un solo color de acento):
+**Apariencia:** mismas claves que Claude (dos límites → dos colores de acento),
+con estos valores por defecto propios de Codex:
 
 | Clave | Def. | Descripción |
 |---|---|---|
-| `barColor` | `#ff10a37f` | Relleno de la barra. |
-| `barTrackColor` | `#40808080` | Fondo de la barra. |
-| `ringColor` | `#ff10a37f` | Arco del anillo. |
-| `ringTrackColor` | `#40808080` | Fondo del anillo. |
+| `bar5hColor` | `#ff10a37f` | Relleno barra 5 h. |
+| `bar7dColor` | `#ff8e7bff` | Relleno barra semanal. |
+| `barTrackColor` | `#40808080` | Fondo de las barras. |
+| `ring5hColor` | `#ff10a37f` | Arco anillo 5 h. |
+| `ring7dColor` | `#ff8e7bff` | Arco anillo semanal. |
+| `ringTrackColor` | `#40808080` | Fondo de los anillos. |
 | `ringThickness` | `12` | Grosor del anillo (2–40). |
-| `labelColor` | `#ffffffff` | Color de etiquetas. |
-| `percentColor` | `#ffffffff` | Color del porcentaje. |
+| `labelColor` / `percentColor` | `#ffffffff` | Colores de texto. |
 | `useThemeTextColor` | `true` | Usar color del tema. |
 
 ### 5.3 Separador de línea
@@ -386,9 +404,23 @@ Columna:
 
 ### 6.5 Disposición: panel (compacta) vs. completa
 
+**Codex — icono de reinicios disponibles (esquina inferior izquierda):**
+
+- Sólo Codex. Visible cuando `available_count > 0` de la API de créditos (§2.3);
+  si es 0 o falla, no se muestra.
+- Se ancla abajo-izquierda, tanto en la vista de panel como en el pie de la
+  vista completa. Su tooltip (al pasar el ratón) tiene el formato:
+  ```
+  Resets: <available_count>
+  - <title>: <granted_at dd/mm> a <expires_at dd/mm> [<Status>]
+  ```
+  (una línea por crédito; `Status` con inicial mayúscula, p. ej. `Available`).
+- El área del icono **no** debe capturar el clic del plasmoide (solo hover para
+  el tooltip), para no interferir con abrir/actualizar.
+
 **Widgets de uso — representación compacta (panel):**
 
-- Claude: **dos** anillos; Codex: **un** anillo.
+- Claude: **dos** anillos; Codex: **dos** anillos (5 h y semanal).
 - Cada anillo va acompañado, **a su lado**, de la etiqueta de hora de reinicio:
   - 5 h → `HH:MM`
   - semanal → `ddd HH:MM`
@@ -660,20 +692,47 @@ Respuesta (recortada):
   "rate_limit": {
     "allowed": true,
     "limit_reached": false,
-    "primary_window": {
-      "used_percent": 0,
-      "limit_window_seconds": 604800,
-      "reset_after_seconds": 604723,
-      "reset_at": 1785266003
-    }
+    "primary_window":   { "used_percent": 1, "limit_window_seconds": 18000,  "reset_at": 1787686340 },
+    "secondary_window": { "used_percent": 0, "limit_window_seconds": 604800, "reset_at": 1788273140 }
   }
 }
 ```
 
-`reset_at = 1785266003` (s) → `2026-07-28T19:13:23Z` → etiqueta semanal
-`mar 21:13` (ejemplo, hora local +2). Render: un anillo `0%` con esa etiqueta.
+`primary_window` (5 h) → anillo/barra de 5 h con etiqueta `hh:mm`.
+`secondary_window` (semanal) → anillo/barra semanal con etiqueta `ddd hh:mm`.
+`reset_at` en segundos Unix → `new Date(reset_at*1000)`.
 
-### 13.3 Vectores de prueba de formato
+### 13.3 Créditos de reinicio de Codex
+
+```bash
+curl -s https://chatgpt.com/backend-api/wham/rate-limit-reset-credits \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "ChatGPT-Account-ID: $ACC" \
+  -H "Accept: application/json"
+```
+
+```json
+{
+  "available_count": 1,
+  "credits": [
+    {
+      "title": "Restablecimiento total (semanal + 5 h)",
+      "status": "available",
+      "granted_at": "2026-08-21T23:16:43.034034Z",
+      "expires_at": "2026-09-20T23:16:43.034034Z"
+    }
+  ]
+}
+```
+
+Como `available_count = 1 > 0`, se muestra el icono con tooltip:
+
+```
+Resets: 1
+- Restablecimiento total (semanal + 5 h): 21/08 a 20/09 [Available]
+```
+
+### 13.4 Vectores de prueba de formato
 
 | Función | Entrada | Salida |
 |---|---|---|

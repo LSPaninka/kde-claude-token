@@ -6,24 +6,31 @@ import org.kde.kirigami 2.20 as Kirigami
 Kirigami.FormLayout {
     id: page
 
-    property string cfg_barColor
+    property string cfg_bar5hColor
+    property string cfg_bar7dColor
     property string cfg_barTrackColor
-    property string cfg_ringColor
+    property string cfg_ring5hColor
+    property string cfg_ring7dColor
     property string cfg_ringTrackColor
     property string cfg_labelColor
     property string cfg_percentColor
     property alias cfg_ringThickness: thicknessSpin.value
     property alias cfg_useThemeTextColor: themeTextCheck.checked
 
-    // ============ Barra ============
+    // ============ Barras ============
     Kirigami.Separator {
-        Kirigami.FormData.label: i18n("Barra")
+        Kirigami.FormData.label: i18n("Barras")
         Kirigami.FormData.isSection: true
     }
     RowLayout {
-        Kirigami.FormData.label: i18n("Barra:")
-        ColorButton { currentColor: page.cfg_barColor; onPicked: page.cfg_barColor = hex }
-        QQC2.Label { text: page.cfg_barColor; opacity: 0.6 }
+        Kirigami.FormData.label: i18n("Barra 5h:")
+        ColorButton { currentColor: page.cfg_bar5hColor; onPicked: page.cfg_bar5hColor = hex }
+        QQC2.Label { text: page.cfg_bar5hColor; opacity: 0.6 }
+    }
+    RowLayout {
+        Kirigami.FormData.label: i18n("Barra semanal:")
+        ColorButton { currentColor: page.cfg_bar7dColor; onPicked: page.cfg_bar7dColor = hex }
+        QQC2.Label { text: page.cfg_bar7dColor; opacity: 0.6 }
     }
     RowLayout {
         Kirigami.FormData.label: i18n("Fondo de barra:")
@@ -31,15 +38,20 @@ Kirigami.FormLayout {
         QQC2.Label { text: page.cfg_barTrackColor; opacity: 0.6 }
     }
 
-    // ============ Anillo ============
+    // ============ Anillos ============
     Kirigami.Separator {
-        Kirigami.FormData.label: i18n("Anillo")
+        Kirigami.FormData.label: i18n("Anillos")
         Kirigami.FormData.isSection: true
     }
     RowLayout {
-        Kirigami.FormData.label: i18n("Anillo:")
-        ColorButton { currentColor: page.cfg_ringColor; onPicked: page.cfg_ringColor = hex }
-        QQC2.Label { text: page.cfg_ringColor; opacity: 0.6 }
+        Kirigami.FormData.label: i18n("Anillo 5h:")
+        ColorButton { currentColor: page.cfg_ring5hColor; onPicked: page.cfg_ring5hColor = hex }
+        QQC2.Label { text: page.cfg_ring5hColor; opacity: 0.6 }
+    }
+    RowLayout {
+        Kirigami.FormData.label: i18n("Anillo semanal:")
+        ColorButton { currentColor: page.cfg_ring7dColor; onPicked: page.cfg_ring7dColor = hex }
+        QQC2.Label { text: page.cfg_ring7dColor; opacity: 0.6 }
     }
     RowLayout {
         Kirigami.FormData.label: i18n("Fondo de anillo:")

@@ -1,8 +1,8 @@
 [Desktop Entry]
 Name=Codex Usage
 Name[es]=Uso de Codex
-Comment=Muestra el porcentaje de uso semanal de Codex (ChatGPT)
-Comment[es]=Muestra el porcentaje de uso semanal de Codex (ChatGPT)
+Comment=Muestra el porcentaje de uso de Codex (ChatGPT): límite de 5h y semanal
+Comment[es]=Muestra el porcentaje de uso de Codex (ChatGPT): límite de 5h y semanal
 Icon=cloudstatus
 Type=Service
 

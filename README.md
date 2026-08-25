@@ -6,7 +6,7 @@ Colección de plasmoides (gadgets de escritorio/panel) para
 | Carpeta | Plasmoide | Descripción |
 |---|---|---|
 | [`claude-usage/`](claude-usage/) | **Uso de Claude** | Uso de Claude Pro Individual: límite de 5 h y semanal, con anillos/barras, horas de reinicio y tiempo restante. |
-| [`codex-usage/`](codex-usage/) | **Uso de Codex** | Uso semanal de Codex (ChatGPT), con la misma interfaz adaptada a un único límite. |
+| [`codex-usage/`](codex-usage/) | **Uso de Codex** | Uso de Codex (ChatGPT): límite de 5 h y semanal, más un icono de reinicios disponibles. |
 | [`separator/`](separator/) | **Separador de línea** | Línea separadora configurable (color, patrón, grosor, longitud, transparencia, orientación). |
 
 Cada carpeta incluye su propio `install.sh` y `README.md` con los detalles.

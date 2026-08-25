@@ -3,8 +3,10 @@ import QtQuick.Layouts 1.15
 import "lib/format.js" as Fmt
 
 /*
- * Vista completa (Codex): una barra horizontal con el límite semanal,
- * etiqueta de hora de reinicio y tiempo restante.
+ * Vista completa (Codex): dos barras horizontales (5 h y semanal) con
+ * etiquetas de hora de reinicio y tiempo restante.
+ *   primary_window   -> límite de 5 horas
+ *   secondary_window -> límite semanal
  */
 ColumnLayout {
     id: view
@@ -16,42 +18,52 @@ ColumnLayout {
 
     spacing: 12
 
-    function primary() {
-        return (usageData && usageData.rate_limit) ? usageData.rate_limit.primary_window : null;
+    function win(which) {
+        if (!usageData || !usageData.rate_limit) return null;
+        return which === "weekly" ? usageData.rate_limit.secondary_window
+                                  : usageData.rate_limit.primary_window;
     }
-    function util() {
-        var p = primary();
-        if (!p || p.used_percent === undefined || p.used_percent === null) return 0;
-        return p.used_percent;
+    function util(which) {
+        var w = win(which);
+        if (!w || w.used_percent === undefined || w.used_percent === null) return 0;
+        return w.used_percent;
     }
-    function resetDate() {
-        var p = primary();
-        if (!p || !p.reset_at) return null;
-        var d = new Date(p.reset_at * 1000);
+    function resetDate(which) {
+        var w = win(which);
+        if (!w || !w.reset_at) return null;
+        var d = new Date(w.reset_at * 1000);
         return isNaN(d.getTime()) ? null : d;
     }
-    function resetInfo() {
-        var d = resetDate();
+    function resetInfo(which, weekly) {
+        var d = resetDate(which);
         if (!d) return i18n("sin datos");
-        var txt = i18n("Reinicia %1", Fmt.fmtDddHM(d));
+        var when = weekly ? Fmt.fmtDddHM(d) : Fmt.fmtHM(d);
+        var txt = i18n("Reinicia %1", when);
         if (plasmoid.configuration.showRemaining) {
             txt += "  ·  " + i18n("faltan %1", Fmt.fmtRemaining(d.getTime() - view.now));
         }
         return txt;
     }
 
-    Item { Layout.fillHeight: true }   // centra verticalmente la única barra
+    UsageBar {
+        Layout.fillWidth: true
+        title: i18n("Límite 5 horas")
+        value: view.util("5h")
+        fillColor: plasmoid.configuration.bar5hColor
+        trackColor: plasmoid.configuration.barTrackColor
+        textColor: view.textColor
+        percentColor: view.percentColor
+        rightText: view.resetInfo("5h", false)
+    }
 
     UsageBar {
         Layout.fillWidth: true
         title: i18n("Límite semanal")
-        value: view.util()
-        fillColor: plasmoid.configuration.barColor
+        value: view.util("weekly")
+        fillColor: plasmoid.configuration.bar7dColor
         trackColor: plasmoid.configuration.barTrackColor
         textColor: view.textColor
         percentColor: view.percentColor
-        rightText: view.resetInfo()
+        rightText: view.resetInfo("weekly", true)
     }
-
-    Item { Layout.fillHeight: true }
 }
