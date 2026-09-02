@@ -30,13 +30,13 @@ ColumnLayout {
     }
     function resetDate(which) {
         var w = win(which);
-        if (!w || !w.reset_at) return null;
+        if (!w || !w.reset_at || !Fmt.windowStarted(w)) return null;
         var d = new Date(w.reset_at * 1000);
         return isNaN(d.getTime()) ? null : d;
     }
     function resetInfo(which, weekly) {
         var d = resetDate(which);
-        if (!d) return i18n("sin datos");
+        if (!d) return "-";
         var when = weekly ? Fmt.fmtDddHM(d) : Fmt.fmtHM(d);
         var txt = i18n("Reinicia %1", when);
         if (plasmoid.configuration.showRemaining) {

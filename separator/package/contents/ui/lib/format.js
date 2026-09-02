@@ -25,6 +25,18 @@ function fmtFull(d) {
     return two(d.getDate()) + "/" + two(d.getMonth() + 1) + " " + fmtHM(d);
 }
 
+// ¿Ha empezado ya el periodo de una ventana de límite? (Codex)
+// El periodo NO ha empezado si aún queda la ventana completa, es decir,
+// reset_after_seconds >= limit_window_seconds (p. ej. 18000 en 5h, 604800 semanal).
+function windowStarted(w) {
+    if (!w) return false;
+    if (w.limit_window_seconds &&
+        w.reset_after_seconds !== undefined && w.reset_after_seconds !== null) {
+        return w.reset_after_seconds < w.limit_window_seconds;
+    }
+    return true;   // si faltan datos, asumir iniciado
+}
+
 // "dd/mm" a partir de una fecha o de una cadena ISO
 function fmtDM(x) {
     var d = (x instanceof Date) ? x : new Date(x);

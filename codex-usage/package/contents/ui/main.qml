@@ -51,7 +51,8 @@ Item {
     }
     function resetDateOf(which) {
         var w = windowObj(which);
-        if (!w || !w.reset_at) return null;
+        // Sin reset_at o periodo aún no iniciado -> "-"
+        if (!w || !w.reset_at || !Fmt.windowStarted(w)) return null;
         var d = new Date(w.reset_at * 1000);   // segundos Unix
         return isNaN(d.getTime()) ? null : d;
     }

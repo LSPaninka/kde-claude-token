@@ -189,6 +189,12 @@ Reglas de normalización:
 - Claude: `resets_at` es ISO 8601 → parsear como fecha con zona.
 - Codex: `reset_at` son **segundos Unix** → `instante = epochSeconds * 1000`
   (milisegundos) o equivalente.
+- **Codex — periodo no iniciado:** una ventana cuyo `reset_after_seconds`
+  todavía es igual (o mayor) a `limit_window_seconds` (18000 en 5 h, 604800 en
+  semanal) **aún no ha empezado** su cuenta atrás; en ese caso `resetsAt` se
+  trata como null y la etiqueta muestra `-`. Sólo cuando el periodo ha empezado
+  (`reset_after_seconds < limit_window_seconds`) se muestra `reset_at`.
+  `windowStarted(w) = w.reset_after_seconds < w.limit_window_seconds`.
 
 Valores derivados calculados en cada repintado:
 

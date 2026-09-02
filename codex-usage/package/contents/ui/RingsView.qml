@@ -30,7 +30,7 @@ RowLayout {
     }
     function resetDate(which) {
         var w = win(which);
-        if (!w || !w.reset_at) return null;
+        if (!w || !w.reset_at || !Fmt.windowStarted(w)) return null;
         var d = new Date(w.reset_at * 1000);
         return isNaN(d.getTime()) ? null : d;
     }
