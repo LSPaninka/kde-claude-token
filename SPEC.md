@@ -13,8 +13,9 @@ Los tres componentes son:
 | 2 | **Uso de Codex** | Muestra el uso semanal de Codex (ChatGPT). Misma interfaz, un solo límite. |
 | 3 | **Separador de línea** | Dibuja una línea separadora configurable. Sin red ni datos. |
 
-La implementación de referencia está hecha en **QML / Qt Quick 5.15** para
-**KDE Plasma 5.27**, sin librerías externas.
+La implementación de referencia está hecha en **QML / Qt Quick 6** para
+**KDE Plasma 6** (probada con 6.6), sin librerías externas. La versión para
+Plasma 5.27 / Qt 5.15 vive en la rama `claude/plasmoide-claude-pro-usage-jno0v4`.
 
 ---
 
@@ -157,7 +158,7 @@ Ambas deben poder **sobrescribirse** por configuración (ver §5).
 ### 2.5 Obtención nativa vs. shell
 
 La referencia QML no tiene cliente HTTP con cabeceras arbitrarias cómodo, así que
-ejecuta un comando de shell (`curl`) mediante el motor de ejecución de Plasma, con
+ejecuta un comando de shell (`curl`) mediante el motor `executable` (en Plasma 6, `Plasma5Support.DataSource`), con
 respaldo a `sed` cuando `jq` no está disponible. **En un port nativo, no hagas
 esto:** usa el cliente HTTP del lenguaje (URLSession, HttpClient, libsoup, fetch,
 Dio…) y el parser JSON nativo, leyendo el archivo de credenciales directamente.
@@ -754,6 +755,6 @@ Resets: 1
 
 ---
 
-*Implementación de referencia: QML/Qt Quick 5.15 para KDE Plasma 5.27. Licencia
+*Implementación de referencia: QML/Qt Quick 6 para KDE Plasma 6. Licencia
 MIT. Este documento es suficiente para reimplementar los tres widgets sin
 consultar el código fuente original.*

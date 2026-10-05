@@ -1,6 +1,6 @@
 # Uso de Claude — Plasmoide para KDE
 
-Plasmoide (gadget de escritorio) para **Kubuntu 24.04 / KDE Plasma 5.27 / Qt 5.15**
+Plasmoide (gadget de escritorio) para **Kubuntu 26.04 / KDE Plasma 6 (probado con 6.6) / Qt 6**
 que muestra el porcentaje de uso actual de **Claude Pro Individual**: el límite
 de **5 horas** y el límite **semanal**, con la hora de reinicio y el tiempo
 restante de cada uno.
@@ -52,8 +52,8 @@ curl -s https://api.anthropic.com/api/oauth/usage \
   -H "Content-Type: application/json"
 ```
 
-Internamente se ejecuta un comando de shell (motor `executable` del DataEngine
-de Plasma) que:
+Internamente se ejecuta un comando de shell (motor `executable`, que en Plasma 6 se usa vía
+`org.kde.plasma.plasma5support`) que:
 
 1. Extrae el token de `~/.claude/.credentials.json` con `jq`; si `jq` no está
    disponible, cae automáticamente a `sed`.
@@ -94,17 +94,17 @@ Para **desinstalar**: `./install.sh --remove`.
 Instalación manual alternativa (equivalente):
 
 ```bash
-kpackagetool5 --type Plasma/Applet --install package
+kpackagetool6 --type Plasma/Applet --install package
 # actualizar:
-kpackagetool5 --type Plasma/Applet --upgrade package
+kpackagetool6 --type Plasma/Applet --upgrade package
 # eliminar:
-kpackagetool5 --type Plasma/Applet --remove io.peperina.claudeusage
+kpackagetool6 --type Plasma/Applet --remove io.peperina.claudeusage
 ```
 
 Si el applet no refleja los cambios durante el desarrollo:
 
 ```bash
-kquitapp5 plasmashell && kstart5 plasmashell
+systemctl --user restart plasma-plasmashell
 ```
 
 ---
@@ -148,7 +148,7 @@ guardan como cadenas hexadecimales `#AARRGGBB`.
 
 ```
 package/
-├── metadata.desktop              Metadatos del applet (Plasma 5)
+├── metadata.json                 Metadatos del applet (Plasma 6)
 └── contents/
     ├── config/
     │   ├── main.xml              Definición de las claves de configuración (KConfigXT)

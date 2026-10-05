@@ -1,6 +1,6 @@
 # Separador de línea — Plasmoide para KDE
 
-Plasmoide (gadget) para **KDE Plasma 5.27 / Qt 5.15** que dibuja una simple
+Plasmoide (gadget) para **KDE Plasma 6 / Qt 6** que dibuja una simple
 **línea separadora** totalmente configurable. Pensado para separar visualmente
 grupos de iconos en un panel, pero también funciona en el escritorio.
 

@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import QtQuick.Dialogs 1.3
+import QtQuick
+import QtQuick.Dialogs
 import "lib/format.js" as Fmt
 
 /*
@@ -40,8 +40,8 @@ Item {
     ColorDialog {
         id: dlg
         title: i18n("Elegir color")
-        showAlphaChannel: true
-        color: cb.currentColor
-        onAccepted: cb.picked(Fmt.colorToHex(dlg.color))
+        options: ColorDialog.ShowAlphaChannel
+        selectedColor: cb.currentColor
+        onAccepted: cb.picked(Fmt.colorToHex(dlg.selectedColor))
     }
 }

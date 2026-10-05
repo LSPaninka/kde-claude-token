@@ -1,13 +1,14 @@
-import QtQuick 2.15
-import QtQuick.Layouts 1.15
-import QtQuick.Controls 2.15 as QQC2
-import org.kde.plasma.plasmoid 2.0
-import org.kde.plasma.core 2.0 as PlasmaCore
-import org.kde.plasma.components 3.0 as PlasmaComponents
-import org.kde.kirigami 2.20 as Kirigami
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls as QQC2
+import org.kde.plasma.plasmoid
+import org.kde.plasma.core as PlasmaCore
+import org.kde.plasma.plasma5support as Plasma5Support
+import org.kde.plasma.components as PlasmaComponents
+import org.kde.kirigami as Kirigami
 import "lib/format.js" as Fmt
 
-Item {
+PlasmoidItem {
     id: root
 
     // -------- Estado --------
@@ -17,18 +18,18 @@ Item {
     property double lastUpdate: 0
     property double now: Date.now()
 
-    readonly property color txtColor: plasmoid.configuration.useThemeTextColor
+    readonly property color txtColor: Plasmoid.configuration.useThemeTextColor
                                        ? Kirigami.Theme.textColor
-                                       : plasmoid.configuration.labelColor
-    readonly property color pctColor: plasmoid.configuration.useThemeTextColor
+                                       : Plasmoid.configuration.labelColor
+    readonly property color pctColor: Plasmoid.configuration.useThemeTextColor
                                        ? Kirigami.Theme.textColor
-                                       : plasmoid.configuration.percentColor
+                                       : Plasmoid.configuration.percentColor
 
     readonly property string planType: (usageData && usageData.plan_type) ? usageData.plan_type : ""
 
     signal usageUpdated(bool ok)
     property int failStreak: 0
-    readonly property bool alarmActive: plasmoid.configuration.errorBlink && failStreak >= 2
+    readonly property bool alarmActive: Plasmoid.configuration.errorBlink && failStreak >= 2
 
     // -------- Créditos de reinicio (reset credits) --------
     property var resetData: null
@@ -82,7 +83,7 @@ Item {
     // =====================================================================
     // Construye el comando de shell que lee las credenciales y consulta la URL.
     function buildCodexCommand(url) {
-        var path = plasmoid.configuration.credentialsPath;
+        var path = Plasmoid.configuration.credentialsPath;
         if (!path || path.trim() === "") {
             path = "${CODEX_HOME:-$HOME/.codex}/auth.json";
         } else {
@@ -148,26 +149,26 @@ Item {
         } catch (e) { /* se ignora: se conserva el último estado */ }
     }
 
-    PlasmaCore.DataSource {
+    Plasma5Support.DataSource {
         id: usageSource
         engine: "executable"
         connectedSources: []
-        onNewData: {
+        onNewData: (sourceName, data) => {
             var stdout = data["stdout"] || "";
             var stderr = data["stderr"] || "";
-            disconnectSource(sourceName);
+            usageSource.disconnectSource(sourceName);
             root.handleResult(stdout, stderr);
         }
         function exec(cmd) { connectSource(cmd); }
     }
 
-    PlasmaCore.DataSource {
+    Plasma5Support.DataSource {
         id: resetSource
         engine: "executable"
         connectedSources: []
-        onNewData: {
+        onNewData: (sourceName, data) => {
             var stdout = data["stdout"] || "";
-            disconnectSource(sourceName);
+            resetSource.disconnectSource(sourceName);
             root.handleResetResult(stdout);
         }
         function exec(cmd) { connectSource(cmd); }
@@ -175,7 +176,7 @@ Item {
 
     Timer {
         id: pollTimer
-        interval: Math.max(15, plasmoid.configuration.refreshInterval) * 1000
+        interval: Math.max(15, Plasmoid.configuration.refreshInterval) * 1000
         running: true
         repeat: true
         triggeredOnStart: true
@@ -193,16 +194,16 @@ Item {
     //  Representación compacta (panel) — dos anillos + hora de reinicio.
     //  Clic izquierdo: abrir la vista completa. Clic central: actualizar.
     // =====================================================================
-    Plasmoid.compactRepresentation: MouseArea {
+    compactRepresentation: MouseArea {
         id: cr
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-        onClicked: {
+        onClicked: (mouse) => {
             if (mouse.button === Qt.MiddleButton) root.refreshAll();
-            else plasmoid.expanded = !plasmoid.expanded;
+            else root.expanded = !root.expanded;
         }
 
-        readonly property bool vertical: plasmoid.formFactor === PlasmaCore.Types.Vertical
-        readonly property real scale01: Math.max(0.5, Math.min(1.0, plasmoid.configuration.panelIconScale / 100))
+        readonly property bool vertical: Plasmoid.formFactor === PlasmaCore.Types.Vertical
+        readonly property real scale01: Math.max(0.5, Math.min(1.0, Plasmoid.configuration.panelIconScale / 100))
         readonly property real thickness: vertical ? cr.width : cr.height
         readonly property real ringSize: Math.round(Math.max(8, thickness * scale01))
         readonly property int gap: Kirigami.Units.smallSpacing
@@ -243,8 +244,8 @@ Item {
                     Layout.preferredWidth: cr.ringSize
                     Layout.preferredHeight: cr.ringSize
                     value: root.utilOf("5h")
-                    ringColor: plasmoid.configuration.ring5hColor
-                    trackColor: plasmoid.configuration.ringTrackColor
+                    ringColor: Plasmoid.configuration.ring5hColor
+                    trackColor: Plasmoid.configuration.ringTrackColor
                     thickness: Math.max(2, cr.ringSize * 0.15)
                     textColor: root.pctColor
                     alarm: root.alarmActive
@@ -265,8 +266,8 @@ Item {
                     Layout.preferredWidth: cr.ringSize
                     Layout.preferredHeight: cr.ringSize
                     value: root.utilOf("weekly")
-                    ringColor: plasmoid.configuration.ring7dColor
-                    trackColor: plasmoid.configuration.ringTrackColor
+                    ringColor: Plasmoid.configuration.ring7dColor
+                    trackColor: Plasmoid.configuration.ringTrackColor
                     thickness: Math.max(2, cr.ringSize * 0.15)
                     textColor: root.pctColor
                     alarm: root.alarmActive
@@ -284,7 +285,7 @@ Item {
     // =====================================================================
     //  Representación completa
     // =====================================================================
-    Plasmoid.fullRepresentation: Item {
+    fullRepresentation: Item {
         Layout.minimumWidth: Kirigami.Units.gridUnit * 15
         Layout.minimumHeight: Kirigami.Units.gridUnit * 11
         Layout.preferredWidth: Kirigami.Units.gridUnit * 18
@@ -332,7 +333,7 @@ Item {
             Loader {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                sourceComponent: plasmoid.configuration.displayMode === "rings"
+                sourceComponent: Plasmoid.configuration.displayMode === "rings"
                                  ? ringsComponent : barsComponent
             }
             Component {

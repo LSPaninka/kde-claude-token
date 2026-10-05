@@ -1,6 +1,6 @@
 # Uso de Codex — Plasmoide para KDE
 
-Plasmoide (gadget de escritorio) para **Kubuntu 24.04 / KDE Plasma 5.27 / Qt 5.15**
+Plasmoide (gadget de escritorio) para **Kubuntu 26.04 / KDE Plasma 6 (probado con 6.6) / Qt 6**
 que muestra el porcentaje de uso de **Codex** (a través de la cuenta de ChatGPT):
 el límite de **5 horas** y el límite **semanal**. Comparte la misma interfaz que
 el plasmoide de Claude (anillos, barras, etiquetas, comportamientos y

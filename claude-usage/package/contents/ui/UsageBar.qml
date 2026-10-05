@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import QtQuick.Layouts 1.15
+import QtQuick
+import QtQuick.Layouts
 
 /*
  * Barra horizontal de progreso con título, porcentaje y una línea inferior

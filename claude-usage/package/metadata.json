@@ -1,0 +1,23 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Lucas Paninka",
+                "Email": "lucas.paninka@peperina.io"
+            }
+        ],
+        "Category": "System Information",
+        "Description": "Shows Claude Pro usage (5-hour and weekly limits)",
+        "Description[es]": "Muestra el porcentaje de uso de Claude Pro (límite de 5h y semanal)",
+        "EnabledByDefault": true,
+        "Icon": "cloudstatus",
+        "Id": "io.peperina.claudeusage",
+        "License": "MIT",
+        "Name": "Claude Usage",
+        "Name[es]": "Uso de Claude",
+        "Version": "2.0.0",
+        "Website": ""
+    },
+    "KPackageStructure": "Plasma/Applet",
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

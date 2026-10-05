@@ -1,5 +1,6 @@
-import QtQuick 2.15
-import QtQuick.Layouts 1.15
+import QtQuick
+import QtQuick.Layouts
+import org.kde.plasma.plasmoid
 import "lib/format.js" as Fmt
 
 /*
@@ -46,9 +47,9 @@ RowLayout {
             Layout.fillHeight: true
             value: view.util("5h")
             caption: "5h"
-            ringColor: plasmoid.configuration.ring5hColor
-            trackColor: plasmoid.configuration.ringTrackColor
-            thickness: plasmoid.configuration.ringThickness
+            ringColor: Plasmoid.configuration.ring5hColor
+            trackColor: Plasmoid.configuration.ringTrackColor
+            thickness: Plasmoid.configuration.ringThickness
             textColor: view.percentColor
             subTextColor: view.textColor
         }
@@ -72,9 +73,9 @@ RowLayout {
             Layout.fillHeight: true
             value: view.util("weekly")
             caption: "7d"
-            ringColor: plasmoid.configuration.ring7dColor
-            trackColor: plasmoid.configuration.ringTrackColor
-            thickness: plasmoid.configuration.ringThickness
+            ringColor: Plasmoid.configuration.ring7dColor
+            trackColor: Plasmoid.configuration.ringTrackColor
+            thickness: Plasmoid.configuration.ringThickness
             textColor: view.percentColor
             subTextColor: view.textColor
         }

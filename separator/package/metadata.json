@@ -1,0 +1,23 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Lucas Paninka",
+                "Email": "lucas.paninka@peperina.io"
+            }
+        ],
+        "Category": "Windows and Tasks",
+        "Description": "A configurable separator line (color, pattern, thickness, length, opacity)",
+        "Description[es]": "Una línea separadora configurable (color, patrón, grosor, longitud, transparencia)",
+        "EnabledByDefault": true,
+        "Icon": "distribute-vertical-equal",
+        "Id": "io.peperina.lineseparator",
+        "License": "MIT",
+        "Name": "Line Separator",
+        "Name[es]": "Separador de línea",
+        "Version": "2.0.0",
+        "Website": ""
+    },
+    "KPackageStructure": "Plasma/Applet",
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

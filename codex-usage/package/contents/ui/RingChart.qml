@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 
 /*
  * Anillo (donut) con el porcentaje en el centro.
